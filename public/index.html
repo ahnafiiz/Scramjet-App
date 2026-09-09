@@ -1,13 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta
 			name="viewport"
 			content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
 		/>
-		<title>Home - Classroom</title>
-
+		<title>Scramjet - Free Web Access</title>
+		<meta name="description" content="Bypass restrictions and study freely with Scramjet" />
 		<link rel="shortcut icon" content="favicon.webp" />
 	
 		<script src="/scram/scramjet.all.js"></script>
@@ -20,28 +20,50 @@
 	</head>
 
 	<body>
-		<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
-			<img class="logo" src="sj.png" alt="Scramjet" />
-			<h1>creds to mercury workshop</h1>
-		</div>
-		<div class="flex-center desc left-margin">
-			<p>
-				hi
-			</p>
+		<!-- Access Restriction Overlay -->
+		<div id="restriction-overlay" class="restriction-overlay active">
+			<div class="restriction-container">
+				<h1 class="restriction-title">Access Restricted</h1>
+				<p class="restriction-subtitle">This website has been blocked by your administrator</p>
+				
+				<div class="restriction-icon">
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+						<circle cx="50" cy="50" r="45" fill="none" stroke="#ff6b5b" stroke-width="8"/>
+						<line x1="20" y1="20" x2="80" y2="80" stroke="#ff6b5b" stroke-width="8" stroke-linecap="round"/>
+					</svg>
+				</div>
+				
+				<p class="restriction-category">Category: <strong>Online Chat</strong></p>
+				<p class="restriction-brand">senso</p>
+			</div>
 		</div>
 
-		<form id="sj-form" class="flex-center">
-			<input
-				id="sj-search-engine"
-				value="https://www.google.com/search?q=%s"
-				type="hidden"
-			/>
-			<input id="sj-address" type="text" placeholder="Search the web freely" />
-		</form>
-		<div class="desc left-margin">
-			<p id="sj-error"></p>
-			<pre id="sj-error-code"></pre>
-		</div>
+		<main>
+			<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
+				<img class="logo" src="sj.png" alt="Scramjet" />
+				<h1>Study Without Limits</h1>
+			</div>
+			<div class="flex-center desc">
+				<p>
+					Access the open web, unfiltered and unrestricted
+				</p>
+			</div>
+
+			<form id="sj-form" class="flex-center">
+				<input
+					id="sj-search-engine"
+					value="https://www.google.com/search?q=%s"
+					type="hidden"
+				/>
+				<input id="sj-address" type="text" placeholder="Enter URL or search..." />
+			</form>
+			
+			<div class="desc left-margin">
+				<p id="sj-error"></p>
+				<pre id="sj-error-code"></pre>
+			</div>
+		</main>
+
 		<footer>
 			<div>
 				<a
@@ -57,7 +79,7 @@
 				<a title="License information" href="credits.html">Credits</a>
 			</div>
 			<div>
-				<span>Scramjet &copy; MW 2025</span>
+				<span>Scramjet &copy; Mercury Workshop 2025</span>
 			</div>
 		</footer>
 	</body>

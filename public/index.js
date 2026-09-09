@@ -1,4 +1,45 @@
 "use strict";
+
+// ============================================
+// RESTRICTION OVERLAY - KONAMI CODE BYPASS
+// ============================================
+const restrictionOverlay = document.getElementById("restriction-overlay");
+const konamiSequence = ["ArrowUp", "ArrowDown", "ArrowUp", "ArrowDown"];
+let konamiIndex = 0;
+let konamiTimeout;
+
+document.addEventListener("keydown", (event) => {
+	// Clear timeout if keys stop being pressed
+	clearTimeout(konamiTimeout);
+
+	// Check if the current key matches the expected sequence
+	if (event.key === konamiSequence[konamiIndex]) {
+		konamiIndex++;
+
+		// If the full sequence is entered, remove the restriction overlay
+		if (konamiIndex === konamiSequence.length) {
+			restrictionOverlay.classList.add("hidden");
+			konamiIndex = 0; // Reset for potential re-locking
+		}
+	} else {
+		// Reset if wrong key is pressed
+		konamiIndex = 0;
+		// Check if this key is the first in the sequence
+		if (event.key === konamiSequence[0]) {
+			konamiIndex = 1;
+		}
+	}
+
+	// Reset sequence after 2 seconds of inactivity
+	konamiTimeout = setTimeout(() => {
+		konamiIndex = 0;
+	}, 2000);
+});
+
+// ============================================
+// ORIGINAL SCRAMJET FUNCTIONALITY
+// ============================================
+
 /**
  * @type {HTMLFormElement}
  */

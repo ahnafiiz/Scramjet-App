@@ -1,12 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap");
+
+* {
+	box-sizing: border-box;
+}
 
 body {
-	font-family: "Roboto", Arial, Helvetica, sans-serif;
+	font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	margin: 0;
-	background: #111;
+	background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
+	color: #e5e7eb;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .flex-center {
@@ -17,7 +24,8 @@ body {
 .header-center {
 	align-items: center;
 	flex-direction: column;
-	margin-top: 10%;
+	margin-top: 6vh;
+	padding: 0 20px;
 }
 
 .left-margin {
@@ -31,31 +39,52 @@ body {
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background-color: #111;
+	background-color: #0f0f0f;
 }
 
 #sj-error {
-	color: #ff6666 !important;
+	color: #ff6b6b !important;
 	white-space: pre-wrap;
+	font-size: 14px;
+	line-height: 1.6;
 }
 
 #sj-error-code {
 	font-size: 12px;
-	color: #fff;
-	font-family: "Courier New", Courier, monospace;
+	color: #9ca3af;
+	font-family: "Fira Code", "Courier New", monospace;
+	background: rgba(0, 0, 0, 0.4);
+	padding: 12px;
+	border-radius: 6px;
+	overflow-x: auto;
+	margin-top: 8px;
 }
 
 .logo {
-	height: 25vh;
+	height: 20vh;
+	max-height: 160px;
+	margin-bottom: 16px;
+	animation: fadeInDown 0.6s ease-out;
 }
 
 .logo-wrapper .text {
-	font-size: 75px;
+	font-size: 64px;
 	color: #fff;
+	font-weight: 700;
 }
 
 .logo-wrapper h1 {
-	color: white;
+	color: #e5e7eb;
+	font-family: "Poppins", sans-serif;
+	font-size: 28px;
+	font-weight: 600;
+	margin: 12px 0 0 0;
+	letter-spacing: -0.5px;
+	background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 
 footer {
@@ -63,8 +92,10 @@ footer {
 	margin-top: auto;
 	display: flex;
 	flex-direction: column;
-	line-height: 30px;
-	margin-bottom: 20px;
+	line-height: 24px;
+	margin-bottom: 24px;
+	padding-top: 32px;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 footer > div {
@@ -72,82 +103,181 @@ footer > div {
 	justify-content: left;
 	align-items: center;
 	flex-wrap: wrap;
-	margin-bottom: 15px;
+	margin-bottom: 12px;
 }
 
 footer a,
 footer span {
-	margin: 0 15px;
+	margin: 0 12px;
 	text-decoration: none;
-	color: #fff;
-	font-size: 15px;
+	color: #9ca3af;
+	font-size: 14px;
+	font-weight: 500;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 footer a {
 	cursor: pointer;
+	position: relative;
 }
 
 footer a:hover {
-	text-decoration: underline;
+	color: #60a5fa;
+}
+
+footer a::after {
+	content: "";
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	width: 0;
+	height: 2px;
+	background: linear-gradient(90deg, #60a5fa, #a78bfa);
+	transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+footer a:hover::after {
+	width: 100%;
 }
 
 .desc p {
-	width: 560px;
-	color: rgba(253, 253, 253, 0.514);
+	width: 100%;
+	max-width: 560px;
+	color: #9ca3af;
+	font-size: 14px;
+	line-height: 1.6;
+	font-weight: 500;
+	margin: 0;
+	letter-spacing: 0.3px;
 }
 
 #sj-address {
-	background: none;
+	background: rgba(255, 255, 255, 0.05);
 	font-family: inherit;
-	padding: 0px 17px;
-	height: 48px;
-	border: 1px solid rgb(255, 255, 255, 0.2);
-	color: var(--text-color);
-	border-radius: 3px;
+	padding: 14px 20px;
+	height: 54px;
+	border: 1.5px solid rgba(255, 255, 255, 0.1);
+	color: #e5e7eb;
+	border-radius: 12px;
 	outline: none;
-	width: 350px;
-	margin-top: 5px;
-	border-radius: 50px;
-	color: #fff;
-	transition: border-radius 0.1s;
+	width: 100%;
+	max-width: 480px;
+	margin-top: 20px;
+	font-size: 15px;
+	font-weight: 500;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	backdrop-filter: blur(10px);
+}
+
+#sj-address::placeholder {
+	color: #6b7280;
+	font-weight: 400;
+}
+
+#sj-address:hover {
+	border-color: rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.08);
 }
 
 #sj-address:focus {
-	border: 1px solid rgba(253, 253, 253, 0.514);
-	border-radius: 6px;
+	border-color: #60a5fa;
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1), inset 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
+@keyframes fadeInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Modern Credit Cards */
 .credit {
-	border-radius: 10px;
-	padding: 10px;
+	border-radius: 12px;
+	padding: 16px;
 	display: block;
-	border: #fff 1px solid;
-	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #e5e7eb;
 	display: flex;
 	flex-wrap: wrap;
-	margin-bottom: 15px;
+	margin-bottom: 16px;
+	background: rgba(255, 255, 255, 0.03);
+	backdrop-filter: blur(10px);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.credit:hover {
+	border-color: rgba(96, 165, 250, 0.3);
+	background: rgba(96, 165, 250, 0.05);
+}
+
+.credit span {
+	font-weight: 600;
+	color: #e5e7eb;
+	font-size: 15px;
 }
 
 .credit label {
 	margin-left: auto;
-	margin-right: 15px;
+	margin-right: 12px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	color: #60a5fa;
+	transition: all 0.2s ease;
 }
 
-.credit a,
-.credit label {
-	color: white;
+.credit label:hover {
+	color: #a78bfa;
+}
+
+.credit a {
+	color: #60a5fa;
+	text-decoration: none;
+	font-weight: 500;
+	font-size: 14px;
+	transition: color 0.2s ease;
+	margin: 0;
+}
+
+.credit a:hover {
+	color: #a78bfa;
 	text-decoration: underline;
-	text-align: right;
 }
 
 .credit pre {
 	display: none;
 	width: 100%;
+	background: rgba(0, 0, 0, 0.4);
+	border-radius: 8px;
+	padding: 12px;
+	font-size: 11px;
+	color: #9ca3af;
+	font-family: "Fira Code", "Courier New", monospace;
+	overflow-x: auto;
+	margin-top: 12px;
+	line-height: 1.5;
 }
 
 .credit label::after {
 	content: "show license";
-	cursor: pointer;
+	margin-left: 4px;
 }
 
 .credit input:checked + label::after {
@@ -156,4 +286,238 @@ footer a:hover {
 
 .credit input:checked ~ pre {
 	display: block;
+}
+
+/* Restriction Overlay Styles */
+.restriction-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	backdrop-filter: blur(2px);
+	transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	opacity: 1;
+	visibility: visible;
+}
+
+.restriction-overlay.hidden {
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.restriction-container {
+	text-align: center;
+	animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+	padding: 40px 20px;
+	max-width: 500px;
+}
+
+.restriction-title {
+	font-family: "Poppins", sans-serif;
+	font-size: 42px;
+	font-weight: 700;
+	color: #ffffff;
+	margin: 0 0 12px 0;
+	letter-spacing: -0.5px;
+}
+
+.restriction-subtitle {
+	font-size: 16px;
+	color: #b3b3b3;
+	margin: 0 0 40px 0;
+	font-weight: 400;
+	letter-spacing: 0.3px;
+}
+
+.restriction-icon {
+	width: 140px;
+	height: 140px;
+	margin: 0 auto 40px auto;
+	animation: pulse 2s ease-in-out infinite;
+}
+
+.restriction-icon svg {
+	width: 100%;
+	height: 100%;
+	filter: drop-shadow(0 0 20px rgba(255, 107, 91, 0.3));
+}
+
+.restriction-category {
+	font-size: 15px;
+	color: #9ca3af;
+	margin: 24px 0 8px 0;
+	font-weight: 500;
+	letter-spacing: 0.5px;
+}
+
+.restriction-category strong {
+	color: #ffffff;
+	font-weight: 600;
+}
+
+.restriction-brand {
+	font-size: 20px;
+	color: #60a5fa;
+	font-weight: 700;
+	margin: 0;
+	letter-spacing: -0.3px;
+}
+
+@keyframes slideInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		transform: scale(1);
+		filter: drop-shadow(0 0 20px rgba(255, 107, 91, 0.3));
+	}
+	50% {
+		transform: scale(1.05);
+		filter: drop-shadow(0 0 30px rgba(255, 107, 91, 0.5));
+	}
+}
+
+.credit {
+	border-radius: 12px;
+	padding: 16px;
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: #e5e7eb;
+	background: rgba(255, 255, 255, 0.03);
+	backdrop-filter: blur(10px);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.credit:hover {
+	border-color: rgba(96, 165, 250, 0.3);
+	background: rgba(96, 165, 250, 0.05);
+}
+
+.credit span {
+	font-weight: 600;
+	color: #e5e7eb;
+	font-size: 15px;
+}
+
+.credit label {
+	margin-left: auto;
+	margin-right: 12px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	color: #60a5fa;
+	transition: all 0.2s ease;
+}
+
+.credit label:hover {
+	color: #a78bfa;
+}
+
+.credit a {
+	color: #60a5fa;
+	text-decoration: none;
+	font-weight: 500;
+	font-size: 14px;
+	transition: color 0.2s ease;
+	margin: 0;
+}
+
+.credit a:hover {
+	color: #a78bfa;
+	text-decoration: underline;
+}
+
+.credit pre {
+	display: none;
+	width: 100%;
+	background: rgba(0, 0, 0, 0.4);
+	border-radius: 8px;
+	padding: 12px;
+	font-size: 11px;
+	color: #9ca3af;
+	font-family: "Fira Code", "Courier New", monospace;
+	overflow-x: auto;
+	margin-top: 12px;
+	line-height: 1.5;
+}
+
+.credit label::after {
+	content: "show license";
+	margin-left: 4px;
+}
+
+.credit input:checked + label::after {
+	content: "hide license";
+}
+
+.credit input:checked ~ pre {
+	display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.logo {
+		height: 15vh;
+		max-height: 120px;
+	}
+
+	.logo-wrapper h1 {
+		font-size: 24px;
+	}
+
+	#sj-address {
+		max-width: 100%;
+		font-size: 16px;
+		padding: 12px 16px;
+		height: 50px;
+	}
+
+	.desc p {
+		max-width: 100%;
+		font-size: 13px;
+	}
+
+	footer a,
+	footer span {
+		font-size: 13px;
+		margin: 0 8px;
+	}
+
+	.restriction-title {
+		font-size: 32px;
+	}
+
+	.restriction-subtitle {
+		font-size: 14px;
+	}
+
+	.restriction-icon {
+		width: 110px;
+		height: 110px;
+	}
+
+	.restriction-category {
+		font-size: 13px;
+	}
+
+	.restriction-brand {
+		font-size: 18px;
+	}
 }
