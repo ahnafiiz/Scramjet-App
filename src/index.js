@@ -11,6 +11,9 @@ import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 import { ProxyRotationManager, getProxyUrl } from "./proxyRotation.js";
 import { setupScraperAPI } from "./scraperApi.js";
 
+// Check if running on Vercel (serverless)
+const isVercel = process.env.VERCEL === '1';
+
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 
 // ============================================
@@ -106,26 +109,40 @@ fastify.register(fastifyStatic, {
 	decorateReply: true,
 });
 
-fastify.register(fastifyStatic, {
-	root: scramjetPath,
-	prefix: "/scram/",
-	decorateReply: false,
-});
+// Register optional static file routes (may not exist on Vercel)
+if (!isVercel) {
+	try {
+		fastify.register(fastifyStatic, {
+			root: scramjetPath,
+			prefix: "/scram/",
+			decorateReply: false,
+		});
 
-fastify.register(fastifyStatic, {
-	root: libcurlPath,
-	prefix: "/libcurl/",
-	decorateReply: false,
-});
+		fastify.register(fastifyStatic, {
+			root: libcurlPath,
+			prefix: "/libcurl/",
+			decorateReply: false,
+		});
 
-fastify.register(fastifyStatic, {
-	root: baremuxPath,
-	prefix: "/baremux/",
-	decorateReply: false,
-});
+		fastify.register(fastifyStatic, {
+			root: baremuxPath,
+			prefix: "/baremux/",
+			decorateReply: false,
+		});
+	} catch (error) {
+		console.warn("[Static Files] Some optional static routes failed to register:", error.message);
+	}
+}
 
 fastify.setNotFoundHandler((res, reply) => {
-	return reply.code(404).type("text/html").sendFile("404.html");
+	// Only try to send 404.html locally
+	if (!isVercel) {
+		return reply.code(404).type("text/html").sendFile("404.html");
+	}
+	return reply.code(404).type("application/json").send({
+		error: "Not Found",
+		status: 404,
+	});
 });
 
 // ============================================
