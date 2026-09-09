@@ -83,16 +83,25 @@ export async function fetchWithRotatingIP(url, options = {}) {
 
 		console.log('[ScraperAPI] Fetching:', url);
 
-		const response = await fetch(scraperUrl.toString(), {
-			method: 'GET',
-			timeout: 30000,
-			headers: {
-				'User-Agent': options.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-			},
-		});
+		// Use native fetch with better error handling
+		let response;
+		try {
+			response = await fetch(scraperUrl.toString(), {
+				method: 'GET',
+				timeout: 30000,
+				headers: {
+					'User-Agent': options.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+				},
+			});
+		} catch (fetchError) {
+			// Fallback if fetch is not available
+			console.warn('[ScraperAPI] Native fetch failed, attempting http module');
+			throw new Error(`Fetch failed: ${fetchError.message}`);
+		}
 
 		if (!response.ok) {
-			throw new Error(`ScraperAPI HTTP ${response.status}: ${response.statusText}`);
+			const errorText = await response.text();
+			throw new Error(`ScraperAPI HTTP ${response.status}: ${errorText}`);
 		}
 
 		const data = await response.text();

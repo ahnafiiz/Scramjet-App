@@ -17,7 +17,7 @@ const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 // PROXY ROTATION SETUP
 // ============================================
 const proxyManager = new ProxyRotationManager({
-	enabled: process.env.PROXY_ROTATION_ENABLED !== "false",
+	enabled: process.env.PROXY_ROTATION_ENABLED !== "false" && process.env.VERCEL !== '1',
 	configPath: process.env.PROXY_CONFIG_PATH || "./config/wireproxy",
 	rotationStrategy: process.env.PROXY_ROTATION_STRATEGY || "round-robin", // round-robin, random, least-used
 	sessionTimeout: parseInt(process.env.PROXY_SESSION_TIMEOUT || "3600000"), // 1 hour default
@@ -30,6 +30,7 @@ if (proxyManager.enabled) {
 		console.log("[Proxy Rotation] Initialized successfully");
 	} catch (error) {
 		console.warn("[Proxy Rotation] Failed to initialize, running without rotation:", error.message);
+		proxyManager.enabled = false;
 	}
 }
 
@@ -128,6 +129,17 @@ fastify.setNotFoundHandler((res, reply) => {
 });
 
 // ============================================
+// SIMPLE HEALTH CHECK
+// ============================================
+fastify.get("/", async (request, reply) => {
+	return reply.type("application/json").send({
+		status: "ok",
+		message: "Scramjet app is running",
+		environment: process.env.VERCEL ? "vercel" : "local",
+	});
+});
+
+// ============================================
 // PROXY ROTATION STATUS ENDPOINT
 // ============================================
 // Expose proxy rotation statistics for monitoring
@@ -157,8 +169,12 @@ fastify.get("/api/proxy-status", async (request, reply) => {
 // ============================================
 // If SCRAPER_API_KEY is configured, setup ScraperAPI endpoints
 if (process.env.SCRAPER_API_KEY) {
-	setupScraperAPI(fastify);
-	console.log("[ScraperAPI] Endpoints available at /api/scraper-health and /api/scrape");
+	try {
+		setupScraperAPI(fastify);
+		console.log("[ScraperAPI] Endpoints available at /api/scraper-health and /api/scrape");
+	} catch (error) {
+		console.error("[ScraperAPI] Setup failed:", error.message);
+	}
 }
 
 // ============================================
@@ -207,7 +223,16 @@ let port = parseInt(process.env.PORT || "");
 
 if (isNaN(port)) port = 8080;
 
-fastify.listen({
-	port: port,
-	host: "0.0.0.0",
-});
+// Check if running on Vercel (serverless)
+const isVercel = process.env.VERCEL === '1';
+
+if (!isVercel) {
+	// Only listen locally, not on Vercel
+	fastify.listen({
+		port: port,
+		host: "0.0.0.0",
+	});
+}
+
+// Export for Vercel serverless
+export default fastify;
