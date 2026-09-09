@@ -4,10 +4,47 @@
  * Free tier: 1,000 requests/month
  */
 
-import NodeCache from 'node-cache';
+// Simple in-memory cache (clears on restart)
+class SimpleCache {
+	constructor(ttl = 3600000) {
+		this.cache = new Map();
+		this.ttl = ttl;
+	}
+
+	set(key, value) {
+		this.cache.set(key, {
+			value,
+			expiry: Date.now() + this.ttl,
+		});
+	}
+
+	get(key) {
+		if (!this.cache.has(key)) return undefined;
+
+		const item = this.cache.get(key);
+		if (Date.now() > item.expiry) {
+			this.cache.delete(key);
+			return undefined;
+		}
+
+		return item.value;
+	}
+
+	has(key) {
+		return this.get(key) !== undefined;
+	}
+
+	keys() {
+		return Array.from(this.cache.keys()).filter((key) => this.has(key));
+	}
+
+	flushAll() {
+		this.cache.clear();
+	}
+}
 
 // Cache responses to maximize free tier usage
-const cache = new NodeCache({ stdTTL: 3600 }); // 1 hour default
+const cache = new SimpleCache(3600000); // 1 hour default
 
 /**
  * Fetch with rotating IP via ScraperAPI
