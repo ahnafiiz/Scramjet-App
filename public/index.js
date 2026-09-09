@@ -19,6 +19,7 @@ document.addEventListener("keydown", (event) => {
 		// If the full sequence is entered, remove the restriction overlay
 		if (konamiIndex === konamiSequence.length) {
 			restrictionOverlay.classList.add("hidden");
+			document.body.classList.remove("content-hidden");
 			konamiIndex = 0; // Reset for potential re-locking
 		}
 	} else {

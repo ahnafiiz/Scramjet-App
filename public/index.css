@@ -364,6 +364,12 @@ footer a:hover::after {
 	animation: fadeOutScale 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Show content when overlay is hidden */
+body:not(.content-hidden) main,
+body:not(.content-hidden) footer {
+	display: flex;
+}
+
 .credit {
 	border-radius: 12px;
 	padding: 16px;

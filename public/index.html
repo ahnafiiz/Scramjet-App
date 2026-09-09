@@ -10,16 +10,25 @@
 		<meta name="description" content="Bypass restrictions and study freely with Scramjet" />
 		<link rel="shortcut icon" content="favicon.webp" />
 	
+		<!-- Preload blocked image to prevent flash -->
+		<link rel="preload" as="image" href="blocked.png" />
+	
 		<script src="/scram/scramjet.all.js"></script>
 		<script src="/baremux/index.js"></script>
 		
 		<link rel="stylesheet" href="index.css" />
+		<style>
+			body.content-hidden main,
+			body.content-hidden footer {
+				display: none;
+			}
+		</style>
 		<script src="register-sw.js" defer></script>
 		<script src="search.js" defer></script>
 		<script src="index.js" defer></script>
 	</head>
 
-	<body>
+	<body class="content-hidden">
 		<!-- Access Restriction Overlay -->
 		<div id="restriction-overlay" class="restriction-overlay active">
 		</div>
