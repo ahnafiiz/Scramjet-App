@@ -1,0 +1,127 @@
+# Wireproxy Configuration Template
+# This file sets up wireproxy to expose a SOCKS5 proxy for rotating IPs
+# Place this in config/wireproxy/ directory with sequential numbering
+# e.g., proxy1.conf, proxy2.conf, proxy3.conf, etc.
+
+# ============================================
+# INTERFACE CONFIGURATION (WireGuard Interface)
+# ============================================
+# This configures your local WireGuard interface
+# You'll need to obtain these values from your VPN provider
+
+[Interface]
+# Your allocated IP address within the WireGuard network
+# Usually provided by your VPN provider
+Address = 10.200.200.2/32
+
+# Your private key (KEEP THIS SECRET!)
+# Generate with: wg genkey | tee privatekey | wg pubkey > publickey
+# Or obtain from your VPN provider
+PrivateKey = YOUR_PRIVATE_KEY_HERE
+
+# DNS servers to use when connected
+# These should be servers behind your WireGuard peer
+DNS = 10.200.200.1
+
+# Optional: MTU size (default 1420)
+# MTU = 1420
+
+# Optional: Your listen port if you want to accept peer connections
+# ListenPort = 51820
+
+# ============================================
+# PEER CONFIGURATION (WireGuard Peer/VPN Server)
+# ============================================
+# This defines the WireGuard peer you're connecting to
+
+[Peer]
+# The peer's public key (obtain from your VPN provider)
+PublicKey = PEER_PUBLIC_KEY_HERE
+
+# The endpoint address and port of the WireGuard peer
+# Format: hostname:port or IP:port
+# Example: vpn.example.com:51820 or 203.0.113.45:51820
+Endpoint = VPN_PROVIDER_ENDPOINT:51820
+
+# Which networks should be routed through this peer
+# Use 0.0.0.0/0 to route all traffic
+AllowedIPs = 0.0.0.0/0, ::/0
+
+# Optional: Keep connection alive even when idle
+# Useful for NAT traversal, recommended value is 25 seconds
+# PersistentKeepalive = 25
+
+# Optional: Pre-shared key for additional security
+# If your provider gives you one, use it here
+# PresharedKey = YOUR_PRESHARED_KEY_HERE
+
+# ============================================
+# SOCKS5 PROXY CONFIGURATION
+# ============================================
+# Exposes a SOCKS5 proxy that routes traffic through the WireGuard peer
+
+[Socks5]
+# Address and port to bind the proxy on
+# 127.0.0.1 = only accessible from this machine
+# 0.0.0.0 = accessible from network (use with caution)
+BindAddress = 127.0.0.1:9001
+
+# Optional: Proxy authentication (username and password)
+# Uncomment to enable
+# Username = proxyuser
+# Password = proxypass123
+
+# Optional: Domain whitelist - only proxy certain domains
+# Leave commented to proxy all traffic (recommended for rotating IPs)
+# TunnelDomains = ^(.*\.)?google\.com$
+# TunnelDomains = ^(.*\.)?openai\.com$
+# TunnelDomains = ^(.*\.)?claude\.ai$
+
+# ============================================
+# HTTP PROXY CONFIGURATION (Optional)
+# ============================================
+# Uncomment to also expose an HTTP proxy alongside SOCKS5
+
+# [http]
+# BindAddress = 127.0.0.1:9002
+# Username = proxyuser
+# Password = proxypass123
+
+# ============================================
+# ADVANCED: HEALTH CHECK (Optional)
+# ============================================
+# Monitor connection health and respond with status
+
+# CheckAlive = 1.1.1.1, 8.8.8.8
+# CheckAliveInterval = 5
+
+# ============================================
+# NOTES FOR SETUP
+# ============================================
+# 1. Obtain WireGuard credentials from your VPN provider
+#    - Private Key
+#    - Peer Public Key
+#    - Endpoint address
+#    - Any DNS servers
+#
+# 2. Create multiple copies of this file with different peers
+#    for IP rotation (proxy1.conf, proxy2.conf, etc.)
+#
+# 3. Each copy should have different:
+#    - PrivateKey (if using multiple accounts)
+#    - PublicKey (if connecting to different peers)
+#    - Address (different IP in the WireGuard network)
+#    - BindAddress (different port for each proxy)
+#
+# 4. Recommended rotation sources:
+#    - Mullvad (free, supports exit node selection)
+#    - ProtonVPN (with rotating VPN mode)
+#    - NordVPN (with dedicated VPN gateways)
+#    - PureVPN (supports multiple VPN IPs)
+#    - IVPN (with multiple VPN servers)
+#
+# 5. For best results with reCaptcha avoidance:
+#    - Use residential proxies or legitimate VPN services
+#    - Rotate IP per session (handled by proxyRotation.js)
+#    - Maintain consistent user-agent and fingerprint per session
+#    - Space out requests to avoid detection
