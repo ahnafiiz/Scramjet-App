@@ -7,12 +7,16 @@
 		<title>Classroom</title>
 		<link rel="icon" href="favicon.ico" />
 		<link rel="stylesheet" href="index.css" />
-		<script src="/scram/scramjet.all.js"></script>
-		<script src="/baremux/index.js"></script>
-		<script src="config.js" defer></script>
-		<script src="register-sw.js" defer></script>
-		<script src="search.js" defer></script>
-		<script src="index.js" defer></script>
+<!-- Load the core components immediately -->
+<script src="/baremux/index.js"></script>
+<script src="/scram/scramjet.all.js" defer></script>
+
+<!-- Load your local logic sequentially via defer -->
+<script src="config.js" defer></script>
+<script src="register-sw.js" defer></script>
+<script src="search.js" defer></script>
+<script src="index.js" defer></script>
+
 	</head>
 	<body>
 		<div class="browser-shell">
