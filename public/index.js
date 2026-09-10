@@ -282,7 +282,7 @@ async function initializeTransport() {
 				serviceworker: serviceWorker,
 				transport,
 				config: {
-					prefix: "/~/sj/",
+					prefix: "/proxy/",
 					scramjetPath: "/scramjet/scramjet.js",
 					injectPath: "/controller/controller.inject.js",
 					wasmPath: "/scramjet/scramjet.wasm",
