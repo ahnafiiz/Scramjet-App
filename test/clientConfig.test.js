@@ -45,7 +45,7 @@ test("service-worker registration waits for controller activation", async () => 
 
 test("the browser uses Google for address-bar searches", async () => {
 	const source = await readFile(
-		new URL("../public/index.html", import.meta.url),
+		new URL("../app/src/config.js", import.meta.url),
 		"utf8"
 	);
 
@@ -56,15 +56,15 @@ test("the browser uses Google for address-bar searches", async () => {
 
 test("the browser window title always stays Home - Classroom", async () => {
 	const source = await readFile(
-		new URL("../public/index.js", import.meta.url),
+		new URL("../app/src/main.jsx", import.meta.url),
 		"utf8"
 	);
 	const html = await readFile(
-		new URL("../public/index.html", import.meta.url),
+		new URL("../app/index.html", import.meta.url),
 		"utf8"
 	);
 
 	assert.doesNotMatch(source, /document\.title\s*=\s*tab\.title/);
-	assert.match(source, /document\.title\s*=\s*["']Home - Classroom["']/);
+	assert.match(source, /document\.title\s*=\s*APP_TITLE/);
 	assert.match(html, /<title>Home - Classroom<\/title>/);
 });
