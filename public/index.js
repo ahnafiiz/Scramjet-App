@@ -229,6 +229,32 @@ function getTransportConfig() {
 	return appConfig.transport || appConfig.wisp || { endpoints: [] };
 }
 
+function probeWispEndpoint(endpoint) {
+	return new Promise((resolve, reject) => {
+		let settled = false;
+		const socket = new WebSocket(endpoint);
+		const finish = (callback, value) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timeout);
+			try {
+				socket.close();
+			} catch {
+				// The socket may already be closed by the endpoint.
+			}
+			callback(value);
+		};
+		const timeout = setTimeout(
+			() => finish(reject, new Error("Wisp endpoint timed out.")),
+			5000
+		);
+		socket.addEventListener("open", () => finish(resolve));
+		socket.addEventListener("error", () =>
+			finish(reject, new Error("Wisp endpoint refused the connection."))
+		);
+	});
+}
+
 async function ensureTransport() {
 	if (state.transportReady) return;
 	if (!state.serviceWorkerReady) {
@@ -257,6 +283,7 @@ async function ensureTransport() {
 	for (let attempt = 0; attempt < endpoints.length; attempt += 1) {
 		const endpoint = transportConfig.selectEndpoint();
 		try {
+			await probeWispEndpoint(endpoint);
 			const transportModule = window.EpoxyTransport;
 			const EpoxyTransport =
 				transportModule?.default ||
@@ -266,6 +293,7 @@ async function ensureTransport() {
 				throw new Error("The Scramjet v2 transport bundle did not load.");
 			}
 			transport = new EpoxyTransport({ wisp: endpoint });
+			if (typeof transport.init === "function") await transport.init();
 			controller = new Controller({
 				serviceworker: serviceWorker,
 				transport,
