@@ -52,6 +52,7 @@ const state = {
 	activeTabId: null,
 	transportReady: false,
 	transportEndpoint: null,
+	transportPromise: null,
 	serviceWorkerReady: false,
 	settings: loadSettings(),
 	konamiIndex: 0,
@@ -230,6 +231,16 @@ function getTransportConfig() {
 }
 
 async function ensureTransport() {
+	if (state.transportReady) return;
+	if (!state.transportPromise) {
+		state.transportPromise = initializeTransport().finally(() => {
+			if (!state.transportReady) state.transportPromise = null;
+		});
+	}
+	return state.transportPromise;
+}
+
+async function initializeTransport() {
 	if (state.transportReady) return;
 	if (!state.serviceWorkerReady) {
 		await registerSW();
@@ -493,3 +504,11 @@ window.dismissRestrictionOverlay = dismissBlockedScreen;
 renderQuickLinks();
 applySettings();
 createTab();
+
+// Warm the service worker, Scramjet WASM, and transport while the new-tab
+// screen is visible so the first search does not pay the initialization cost.
+setTimeout(() => {
+	ensureTransport().catch((error) => {
+		console.warn("Background transport warm-up failed.", error);
+	});
+}, 0);
