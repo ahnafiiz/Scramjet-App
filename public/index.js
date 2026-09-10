@@ -172,7 +172,7 @@ function selectTab(tabId) {
 
 	homeView.hidden = Boolean(tab.frame);
 	address.value = tab.activeUrl;
-	document.title = tab.title + " - Classroom";
+	document.title = "Home - Classroom";
 	setStatus(tab.frame ? "" : "Ready");
 	renderTabs();
 	updateNavigationControls();
@@ -322,7 +322,7 @@ async function navigateTo(url, options = {}) {
 		address.value = tab.activeUrl;
 		tab.frame.go(url);
 		setStatus("");
-		document.title = tab.title + " - Classroom";
+		document.title = "Home - Classroom";
 		renderTabs();
 		updateNavigationControls();
 	} catch (error) {

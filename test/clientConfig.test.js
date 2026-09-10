@@ -53,3 +53,18 @@ test("the browser uses Google for address-bar searches", async () => {
 	assert.doesNotMatch(source, /bing\.com\/search/);
 	assert.doesNotMatch(source, /duckduckgo\.com/);
 });
+
+test("the browser window title always stays Home - Classroom", async () => {
+	const source = await readFile(
+		new URL("../public/index.js", import.meta.url),
+		"utf8"
+	);
+	const html = await readFile(
+		new URL("../public/index.html", import.meta.url),
+		"utf8"
+	);
+
+	assert.doesNotMatch(source, /document\.title\s*=\s*tab\.title/);
+	assert.match(source, /document\.title\s*=\s*["']Home - Classroom["']/);
+	assert.match(html, /<title>Home - Classroom<\/title>/);
+});
