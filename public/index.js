@@ -230,6 +230,37 @@ function getTransportConfig() {
 	return appConfig.transport || appConfig.wisp || { endpoints: [] };
 }
 
+function probeWispEndpoint(endpoint) {
+	return new Promise((resolve, reject) => {
+		let settled = false;
+		let socket;
+		const timeout = setTimeout(
+			() => finish(reject, new Error("Wisp endpoint timed out.")),
+			5000
+		);
+		const finish = (callback, value) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timeout);
+			try {
+				socket?.close();
+			} catch {
+				// The socket may already be closed.
+			}
+			callback(value);
+		};
+		try {
+			socket = new WebSocket(endpoint);
+			socket.addEventListener("open", () => finish(resolve));
+			socket.addEventListener("error", () =>
+				finish(reject, new Error("Wisp endpoint refused the connection."))
+			);
+		} catch (error) {
+			finish(reject, error);
+		}
+	});
+}
+
 async function ensureTransport() {
 	if (state.transportReady) return;
 	if (!state.transportPromise) {
@@ -268,6 +299,7 @@ async function initializeTransport() {
 	for (let attempt = 0; attempt < endpoints.length; attempt += 1) {
 		const endpoint = transportConfig.selectEndpoint();
 		try {
+			await probeWispEndpoint(endpoint);
 			const transportModule = window.EpoxyTransport;
 			const EpoxyTransport =
 				transportModule?.default ||

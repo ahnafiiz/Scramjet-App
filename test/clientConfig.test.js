@@ -18,9 +18,6 @@ test("browser config exposes the required quick links and client transport", asy
 		["Geforce Now", "TikTok", "Snapchat", "YouTube", "Quenq"]
 	);
 	assert.equal(config.transport.strategy, "round-robin");
-	assert.equal(
-		config.transport.selectEndpoint(),
-		"wss://wisp.mercurywork.shop/"
-	);
+	assert.equal(config.transport.selectEndpoint(), "wss://wisp.webmc.fun/");
 	assert.equal(Object.isFrozen(config), true);
 });

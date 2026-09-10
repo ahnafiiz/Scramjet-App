@@ -1,9 +1,9 @@
 (function configureScramjetApp(window) {
 	const publicWispEndpoints = Object.freeze([
-		// Public endpoint documented by the Wisp/libcurl maintainers.
-		"wss://wisp.mercurywork.shop/",
-		// Public fallback endpoint for client-side failover.
+		// Prefer the endpoint that is currently accepting browser handshakes.
 		"wss://wisp.webmc.fun/",
+		// Public fallback endpoint documented by the Wisp maintainers.
+		"wss://wisp.mercurywork.shop/",
 	]);
 	let endpointCursor = -1;
 
