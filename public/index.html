@@ -4,12 +4,13 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" content="#080b14" />
-		<title>Home - Classroom</title>
+		<title>Classroom</title>
 		<link rel="icon" href="favicon.ico" />
 		<link rel="stylesheet" href="index.css" />
-		<!-- Load the core components immediately -->
-		<script src="/baremux/index.js"></script>
-		<script src="/scram/scramjet.all.js" defer></script>
+		<!-- Scramjet v2 runtime, controller, and matching Wisp transport. -->
+		<script src="/scramjet/scramjet_bundled.js"></script>
+		<script src="/controller/controller.api.js"></script>
+		<script src="/epoxy/index.js"></script>
 
 		<!-- Load your local logic sequentially via defer -->
 		<script src="config.js" defer></script>
@@ -74,7 +75,7 @@
 					<form id="sj-form" class="address-form">
 						<input
 							id="sj-search-engine"
-							value="https://www.google.com/search?q=%s"
+							value="https://www.bing.com/search?q=%s"
 							type="hidden"
 						/>
 						<label class="sr-only" for="sj-address">Address or search</label>
@@ -115,8 +116,8 @@
 			<main id="browser-content" class="browser-content">
 				<section id="home-view" class="home-view" aria-label="New tab">
 					<img class="home-logo" src="sj.png" alt="Scramjet" />
-					<h1>Classroom</h1>
-					<p id="browser-status" class="browser-status" role="status"></p>
+					<h1>go back to studying mate</h1>
+					<p id="browser-status" class="browser-status" role="status">Credits to Mercury Workerss</p>
 				</section>
 			</main>
 		</div>
