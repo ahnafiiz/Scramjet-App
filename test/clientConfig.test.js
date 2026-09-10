@@ -42,3 +42,14 @@ test("service-worker registration waits for controller activation", async () => 
 	assert.match(source, /controllerchange/);
 	assert.doesNotMatch(source, /Refresh once to activate/);
 });
+
+test("the browser uses Google for address-bar searches", async () => {
+	const source = await readFile(
+		new URL("../public/index.html", import.meta.url),
+		"utf8"
+	);
+
+	assert.match(source, /https:\/\/www\.google\.com\/search\?q=%s/);
+	assert.doesNotMatch(source, /bing\.com\/search/);
+	assert.doesNotMatch(source, /duckduckgo\.com/);
+});
