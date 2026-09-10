@@ -25,5 +25,21 @@ async function registerSW() {
 		updateViaCache: "none",
 	});
 	await navigator.serviceWorker.ready;
+	if (!navigator.serviceWorker.controller) {
+		await new Promise((resolve) => {
+			const timeout = setTimeout(resolve, 1500);
+			navigator.serviceWorker.addEventListener(
+				"controllerchange",
+				() => {
+					clearTimeout(timeout);
+					resolve();
+				},
+				{ once: true }
+			);
+		});
+	}
+	if (!navigator.serviceWorker.controller) {
+		throw new Error("Refresh once to activate the browser service worker.");
+	}
 	return registration;
 }

@@ -60,6 +60,7 @@ const state = {
 	activeTabId: null,
 	transportReady: false,
 	transportEndpoint: null,
+	transportPromise: null,
 	serviceWorkerReady: false,
 	settings: loadSettings(),
 	konamiIndex: 0,
@@ -237,6 +238,17 @@ function getTransportConfig() {
 }
 
 async function ensureTransport() {
+	if (state.transportReady) return;
+	if (state.transportPromise) return state.transportPromise;
+	state.transportPromise = initializeTransport();
+	try {
+		await state.transportPromise;
+	} finally {
+		if (!state.transportReady) state.transportPromise = null;
+	}
+}
+
+async function initializeTransport() {
 	if (state.transportReady) return;
 	if (!state.serviceWorkerReady) {
 		await registerSW();
