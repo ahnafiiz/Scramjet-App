@@ -10,6 +10,7 @@
 	"scripts": {
 		"build": "node --check src/index.js",
 		"start": "node src/index.js",
+		"test": "node --test",
 		"format": "prettier --write .",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix"

@@ -1,237 +1,167 @@
 import { createServer } from "node:http";
-import { fileURLToPath } from "url";
 import { hostname } from "node:os";
-import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
-
-import { scramjetPath } from "@mercuryworkshop/scramjet/path";
-import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
+import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
-import { ProxyRotationManager, getProxyUrl } from "./proxyRotation.js";
-import { setupScraperAPI } from "./scraperApi.js";
+import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
+import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 
-// Check if running on Vercel (serverless)
-const isVercel = process.env.VERCEL === '1';
+import {
+	createProxySocketFactory,
+	parseBoolean,
+	ProxyRotationManager,
+} from "./proxyRotation.js";
 
-const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(__dirname, "..");
+const publicPath = path.join(projectRoot, "public");
 
-// ============================================
-// PROXY ROTATION SETUP
-// ============================================
-const proxyManager = new ProxyRotationManager({
-	enabled: process.env.PROXY_ROTATION_ENABLED !== "false" && process.env.VERCEL !== '1',
-	configPath: process.env.PROXY_CONFIG_PATH || "./config/wireproxy",
-	rotationStrategy: process.env.PROXY_ROTATION_STRATEGY || "round-robin", // round-robin, random, least-used
-	sessionTimeout: parseInt(process.env.PROXY_SESSION_TIMEOUT || "3600000"), // 1 hour default
-});
-
-// Initialize proxy rotation if enabled
-if (proxyManager.enabled) {
-	try {
-		await proxyManager.init();
-		console.log("[Proxy Rotation] Initialized successfully");
-	} catch (error) {
-		console.warn("[Proxy Rotation] Failed to initialize, running without rotation:", error.message);
-		proxyManager.enabled = false;
+function loadEnvironmentFile(file) {
+	if (!existsSync(file)) return;
+	for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+		const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+		if (!match || process.env[match[1]] != null) continue;
+		process.env[match[1]] = match[2].replace(/^(["'])(.*)\1$/, "$2");
 	}
 }
 
-// ============================================
-// WISP CONFIGURATION
-// ============================================
+loadEnvironmentFile(path.join(projectRoot, ".env"));
+loadEnvironmentFile(path.join(projectRoot, ".env.local"));
 
-// ============================================
-// WISP CONFIGURATION
-// ============================================
-// Refer to the documentation at https://www.npmjs.com/package/@mercuryworkshop/wisp-js
+const isVercel = process.env.VERCEL === "1";
+const port = Number.parseInt(process.env.PORT || "8080", 10);
 
-logging.set_level(logging.NONE);
-Object.assign(wisp.options, {
-	allow_udp_streams: false,
-	hostname_blacklist: [/example\.com/],
-	dns_servers: ["1.1.1.3", "1.0.0.3"],
-	// Optional: Apply proxy settings for reCaptcha-prone domains
-	// This will rotate IPs for ChatGPT, Claude, TikTok, etc.
+const proxyManager = new ProxyRotationManager({
+	enabled: !isVercel && parseBoolean(process.env.PROXY_ROTATION_ENABLED, true),
+	autostart: parseBoolean(process.env.WIREPROXY_AUTOSTART, false),
+	required: parseBoolean(process.env.WIREPROXY_REQUIRED, false),
+	configPath: process.env.PROXY_CONFIG_PATH || path.join(projectRoot, "config/wireproxy"),
+	wireproxyBinary: process.env.WIREPROXY_BINARY || "wireproxy",
+	rotationStrategy: process.env.PROXY_ROTATION_STRATEGY || "round-robin",
+	sessionTimeout: Number.parseInt(process.env.PROXY_SESSION_TIMEOUT || "3600000", 10),
+	healthCheckInterval: Number.parseInt(process.env.PROXY_HEALTH_CHECK_INTERVAL || "30000", 10),
 });
 
-// ============================================
-// SESSION TRACKING FOR PROXY ROTATION
-// ============================================
-// Track sessions to maintain IP stickiness within a session
+await proxyManager.init();
 
-const sessionProxyMap = new Map();
+logging.set_level(logging.WARN);
+Object.assign(wisp.options, {
+	allow_udp_streams: false,
+	allow_direct_ip: false,
+	allow_private_ips: false,
+	allow_loopback_ips: false,
+	dns_method: "resolve",
+	dns_servers: ["1.1.1.1", "1.0.0.1"],
+	dns_result_order: "ipv4first",
+});
 
-// Record the sticky proxy selected for a Wisp connection without mutating the
-// imported Wisp module (ES module namespace exports are read-only).
-function applyProxySession(req) {
-	if (proxyManager.enabled) {
-		// Extract or create session ID from request
-		const sessionId = req.headers["x-session-id"] || 
-						  req.headers["cookie"]?.match(/sessionId=([^;]+)/)?.[1] ||
-						  `session-${Date.now()}-${Math.random()}`;
-		
-		// Get proxy for this session
-		const proxyUrl = getProxyUrl(proxyManager, sessionId);
-		
-		if (proxyUrl) {
-			// Store for later reference
-			if (!sessionProxyMap.has(sessionId)) {
-				sessionProxyMap.set(sessionId, proxyUrl);
-			}
-			
-			// Add proxy info to request headers for logging
-			req.headers["x-proxy-url"] = proxyUrl;
-			req.headers["x-session-id"] = sessionId;
-		}
+function isWispRequest(request) {
+	try {
+		return new URL(request.url, "http://localhost").pathname === "/wisp/";
+	} catch {
+		return false;
 	}
+}
+
+function getSessionId(request) {
+	return (
+		request.headers["sec-websocket-key"] ||
+		`${request.socket.remoteAddress || "unknown"}:${request.socket.remotePort || "0"}`
+	);
 }
 
 const fastify = Fastify({
-	serverFactory: (handler) => {
-		return createServer()
-			.on("request", (req, res) => {
-				res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-				res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-				handler(req, res);
+	logger: true,
+	serverFactory: (handler) =>
+		createServer()
+			.on("request", (request, reply) => {
+				reply.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+				reply.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+				handler(request, reply);
 			})
-			.on("upgrade", (req, socket, head) => {
-				if (req.url.endsWith("/wisp/")) {
-					applyProxySession(req);
-					wisp.routeRequest(req, socket, head);
+			.on("upgrade", (request, socket, head) => {
+				if (!isWispRequest(request)) {
+					socket.destroy();
+					return;
 				}
-				else socket.end();
-			});
-	},
+
+				const proxy = proxyManager.getProxyForSession(getSessionId(request));
+				if (!proxy && proxyManager.required) {
+					socket.destroy();
+					return;
+				}
+
+				const connectionOptions = proxy
+					? { TCPSocket: createProxySocketFactory(proxyManager, proxy) }
+					: undefined;
+				wisp.routeRequest(request, socket, head, connectionOptions);
+			}),
 });
 
-fastify.register(fastifyStatic, {
+await fastify.register(fastifyStatic, {
 	root: publicPath,
 	decorateReply: true,
 });
 
-try {
-	fastify.register(fastifyStatic, {
-		root: scramjetPath,
-		prefix: "/scram/",
-		decorateReply: false,
-	});
+await fastify.register(fastifyStatic, {
+	root: scramjetPath,
+	prefix: "/scram/",
+	decorateReply: false,
+});
 
-	fastify.register(fastifyStatic, {
-		root: libcurlPath,
-		prefix: "/libcurl/",
-		decorateReply: false,
-	});
+await fastify.register(fastifyStatic, {
+	root: libcurlPath,
+	prefix: "/libcurl/",
+	decorateReply: false,
+});
 
-	fastify.register(fastifyStatic, {
-		root: baremuxPath,
-		prefix: "/baremux/",
-		decorateReply: false,
-	});
-} catch (error) {
-	console.warn("[Static Files] Some optional static routes failed to register:", error.message);
+await fastify.register(fastifyStatic, {
+	root: baremuxPath,
+	prefix: "/baremux/",
+	decorateReply: false,
+});
+
+fastify.get("/api/health", async () => ({
+	status: "ok",
+	timestamp: new Date().toISOString(),
+	environment: isVercel ? "vercel" : "local",
+	proxyRotation: proxyManager.getStatus(),
+}));
+
+fastify.get("/api/proxy-status", async () => proxyManager.getStatus());
+
+fastify.setNotFoundHandler((request, reply) =>
+	reply.code(404).type("text/html").sendFile("404.html")
+);
+
+async function shutdown(signal) {
+	fastify.log.info(`${signal} received. Closing server.`);
+	await proxyManager.cleanup();
+	await fastify.close();
 }
 
-fastify.setNotFoundHandler((request, reply) => {
-	return reply.code(404).type("text/html").sendFile("404.html");
-});
+process.once("SIGINT", () => shutdown("SIGINT").finally(() => process.exit(0)));
+process.once("SIGTERM", () => shutdown("SIGTERM").finally(() => process.exit(0)));
 
-// ============================================
-// SIMPLE HEALTH CHECK
-// ============================================
-fastify.get("/", async (request, reply) => {
-	return reply.type("application/json").send({
-		status: "ok",
-		message: "Scramjet app is running",
-		environment: process.env.VERCEL ? "vercel" : "local",
-	});
-});
-
-// ============================================
-// PROXY ROTATION STATUS ENDPOINT
-// ============================================
-// Expose proxy rotation statistics for monitoring
-
-fastify.get("/api/proxy-status", async (request, reply) => {
-	if (!proxyManager.enabled) {
-		return reply.send({
-			enabled: false,
-			message: "Proxy rotation is disabled",
+if (!isVercel) {
+	try {
+		await fastify.listen({
+			port: Number.isFinite(port) ? port : 8080,
+			host: "0.0.0.0",
 		});
+		const address = fastify.server.address();
+		console.log("Listening on:");
+		console.log(`\thttp://localhost:${address.port}`);
+		console.log(`\thttp://${hostname()}:${address.port}`);
+	} catch (error) {
+		fastify.log.error(error, "Unable to start server");
+		process.exit(1);
 	}
-
-	const stats = proxyManager.getStats();
-	const activeSessions = sessionProxyMap.size;
-
-	return reply.send({
-		enabled: true,
-		activeProxies: proxyManager.proxies.length,
-		activeSessions,
-		rotationStrategy: proxyManager.rotationStrategy,
-		statistics: stats,
-	});
-});
-
-// ============================================
-// SCRAPER API SETUP (For Vercel Deployment)
-// ============================================
-try {
-	setupScraperAPI(fastify);
-	console.log("[ScraperAPI] Endpoints available at /api/scraper-health and /api/scrape");
-} catch (error) {
-	console.error("[ScraperAPI] Setup failed:", error.message);
 }
 
-// ============================================
-// HEALTH CHECK ENDPOINT
-// ============================================
-fastify.get("/api/health", async (request, reply) => {
-	return reply.send({
-		status: "ok",
-		timestamp: new Date().toISOString(),
-		proxyRotation: proxyManager.enabled ? "enabled" : "disabled",
-		scraperApi: process.env.SCRAPER_API_KEY ? "configured" : "not configured",
-	});
-});
-
-fastify.server.on("listening", () => {
-	const address = fastify.server.address();
-
-	// by default we are listening on 0.0.0.0 (every interface)
-	// we just need to list a few
-	console.log("Listening on:");
-	console.log(`\thttp://localhost:${address.port}`);
-	console.log(`\thttp://${hostname()}:${address.port}`);
-	console.log(
-		`\thttp://${
-			address.family === "IPv6" ? `[${address.address}]` : address.address
-		}:${address.port}`
-	);
-});
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
-
-function shutdown() {
-	console.log("SIGTERM signal received: closing HTTP server");
-	
-	// Cleanup proxy rotation
-	if (proxyManager.enabled) {
-		proxyManager.cleanup().catch(console.error);
-	}
-	
-	fastify.close();
-	process.exit(0);
-}
-
-let port = parseInt(process.env.PORT || "");
-
-if (isNaN(port)) port = 8080;
-
-fastify.listen({
-	port: port,
-	host: "0.0.0.0",
-});
-
-// Export for Vercel serverless
 export default fastify;
