@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build || exit 0",
-  "outputDirectory": ".",
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastify"
 }

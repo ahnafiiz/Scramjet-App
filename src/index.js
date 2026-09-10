@@ -62,9 +62,9 @@ Object.assign(wisp.options, {
 
 const sessionProxyMap = new Map();
 
-// Add request interceptor to apply rotating proxies
-const originalWispRouteRequest = wisp.routeRequest.bind(wisp);
-wisp.routeRequest = function (req, socket, head) {
+// Record the sticky proxy selected for a Wisp connection without mutating the
+// imported Wisp module (ES module namespace exports are read-only).
+function applyProxySession(req) {
 	if (proxyManager.enabled) {
 		// Extract or create session ID from request
 		const sessionId = req.headers["x-session-id"] || 
@@ -85,9 +85,7 @@ wisp.routeRequest = function (req, socket, head) {
 			req.headers["x-session-id"] = sessionId;
 		}
 	}
-	
-	return originalWispRouteRequest(req, socket, head);
-};
+}
 
 const fastify = Fastify({
 	serverFactory: (handler) => {
@@ -98,7 +96,10 @@ const fastify = Fastify({
 				handler(req, res);
 			})
 			.on("upgrade", (req, socket, head) => {
-				if (req.url.endsWith("/wisp/")) wisp.routeRequest(req, socket, head);
+				if (req.url.endsWith("/wisp/")) {
+					applyProxySession(req);
+					wisp.routeRequest(req, socket, head);
+				}
 				else socket.end();
 			});
 	},
@@ -109,40 +110,30 @@ fastify.register(fastifyStatic, {
 	decorateReply: true,
 });
 
-// Register optional static file routes (may not exist on Vercel)
-if (!isVercel) {
-	try {
-		fastify.register(fastifyStatic, {
-			root: scramjetPath,
-			prefix: "/scram/",
-			decorateReply: false,
-		});
+try {
+	fastify.register(fastifyStatic, {
+		root: scramjetPath,
+		prefix: "/scram/",
+		decorateReply: false,
+	});
 
-		fastify.register(fastifyStatic, {
-			root: libcurlPath,
-			prefix: "/libcurl/",
-			decorateReply: false,
-		});
+	fastify.register(fastifyStatic, {
+		root: libcurlPath,
+		prefix: "/libcurl/",
+		decorateReply: false,
+	});
 
-		fastify.register(fastifyStatic, {
-			root: baremuxPath,
-			prefix: "/baremux/",
-			decorateReply: false,
-		});
-	} catch (error) {
-		console.warn("[Static Files] Some optional static routes failed to register:", error.message);
-	}
+	fastify.register(fastifyStatic, {
+		root: baremuxPath,
+		prefix: "/baremux/",
+		decorateReply: false,
+	});
+} catch (error) {
+	console.warn("[Static Files] Some optional static routes failed to register:", error.message);
 }
 
-fastify.setNotFoundHandler((res, reply) => {
-	// Only try to send 404.html locally
-	if (!isVercel) {
-		return reply.code(404).type("text/html").sendFile("404.html");
-	}
-	return reply.code(404).type("application/json").send({
-		error: "Not Found",
-		status: 404,
-	});
+fastify.setNotFoundHandler((request, reply) => {
+	return reply.code(404).type("text/html").sendFile("404.html");
 });
 
 // ============================================
@@ -184,14 +175,11 @@ fastify.get("/api/proxy-status", async (request, reply) => {
 // ============================================
 // SCRAPER API SETUP (For Vercel Deployment)
 // ============================================
-// If SCRAPER_API_KEY is configured, setup ScraperAPI endpoints
-if (process.env.SCRAPER_API_KEY) {
-	try {
-		setupScraperAPI(fastify);
-		console.log("[ScraperAPI] Endpoints available at /api/scraper-health and /api/scrape");
-	} catch (error) {
-		console.error("[ScraperAPI] Setup failed:", error.message);
-	}
+try {
+	setupScraperAPI(fastify);
+	console.log("[ScraperAPI] Endpoints available at /api/scraper-health and /api/scrape");
+} catch (error) {
+	console.error("[ScraperAPI] Setup failed:", error.message);
 }
 
 // ============================================
@@ -240,16 +228,10 @@ let port = parseInt(process.env.PORT || "");
 
 if (isNaN(port)) port = 8080;
 
-// Check if running on Vercel (serverless)
-const isVercel = process.env.VERCEL === '1';
-
-if (!isVercel) {
-	// Only listen locally, not on Vercel
-	fastify.listen({
-		port: port,
-		host: "0.0.0.0",
-	});
-}
+fastify.listen({
+	port: port,
+	host: "0.0.0.0",
+});
 
 // Export for Vercel serverless
 export default fastify;
