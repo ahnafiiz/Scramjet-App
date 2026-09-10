@@ -4,29 +4,18 @@
 
 Open the gear button in the browser to change these settings:
 
-- **Show blocked image on launch** controls whether `public/blocked.png` opens
-  above the browser.
-- **Enable keyboard unlock shortcut** controls whether the keyboard sequence
+- Show blocked image on launch controls whether blocked.png opens above the
+  browser.
+- Enable keyboard unlock shortcut controls whether the Konami keyup sequence
   can close that image.
 
-Both settings are off by default. They are saved in this browser only, so a
-different browser profile can use different settings.
+Both settings are saved and validated in the current browser profile.
 
-The blocked image always has an Open browser button. It is a launch screen, not
-a security boundary.
+## Quick links and browser transport
 
-## Quick links
+Edit public/config.js to change the five Quick links or the public Wisp
+endpoint pool. Endpoint selection and rotation are performed in the browser;
+no private key, server-side proxy process, or environment variable is needed.
 
-Edit `public/config.js` to change the names or addresses in the Quick links
-menu. Each entry has a `label` and `url`.
-
-```js
-{ label: "Example", url: "https://example.com/" }
-```
-
-Reload the page after editing that file.
-
-## Server settings
-
-Use `.env` for port and wireproxy settings. Start from `.env.example`; it
-contains the supported names and safe defaults.
+Use public Wisp endpoints that you operate or trust. The repository includes
+the Mercury Workshop public endpoint as a working default.

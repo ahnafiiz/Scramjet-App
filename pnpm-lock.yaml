@@ -20,9 +20,6 @@ importers:
       '@mercuryworkshop/scramjet':
         specifier: https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz
         version: https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz
-      '@mercuryworkshop/wisp-js':
-        specifier: ^0.4.1
-        version: 0.4.1(utf-8-validate@6.0.4)
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1
@@ -132,10 +129,6 @@ packages:
   '@mercuryworkshop/scramjet@https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz':
     resolution: {tarball: https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz}
     version: 1.1.0
-
-  '@mercuryworkshop/wisp-js@0.4.1':
-    resolution: {integrity: sha512-104LwiXiuhti/e32gmv0Da0u0yuLFDHX8JawCzleTPWJ5t5qTX4EYi4E7/ucbjBPN9wwVPWHE5g5yGqzl/NzQA==}
-    hasBin: true
 
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
@@ -865,15 +858,6 @@ snapshots:
       idb: 8.0.3
       parse-domain: 8.2.2
       set-cookie-parser: 2.7.1
-
-  '@mercuryworkshop/wisp-js@0.4.1(utf-8-validate@6.0.4)':
-    dependencies:
-      bufferutil: 4.1.0
-      commander: 14.0.2
-      ipaddr.js: 2.3.0
-      ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.4)
-    transitivePeerDependencies:
-      - utf-8-validate
 
   '@pinojs/redact@0.4.0': {}
 

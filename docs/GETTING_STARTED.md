@@ -1,25 +1,27 @@
 # Getting Started
 
-## Run the app
+## Run locally
 
 1. Open a terminal in the project folder.
-2. Run `npm install` once.
-3. Copy `.env.example` to `.env` when you want to change the defaults.
-4. Run `npm start`.
-5. Open `http://localhost:8080`.
+2. Run npm install once.
+3. Run npm start.
+4. Open http://localhost:8080.
 
-The homepage is the browser. Health information is available at `/api/health`.
+The local process serves the browser assets only. Browsing traffic is initiated
+in the browser and sent to the public Wisp endpoint configured in
+public/config.js.
 
 ## Use the browser
 
-- Use the plus button to open a tab.
-- Use the left and right arrows for that tab's history.
-- Use Quick links for the pre-set sites.
-- Open Settings with the gear button to control the launch image and keyboard shortcut.
+- Use the plus button to open an independent tab.
+- Use the left and right arrows to navigate that tab's own history.
+- Use Quick links for the five preset destinations.
+- Open Settings to control the launch overlay and keyboard shortcut.
 
-## Before deploying
+## Deploy to Vercel
 
-Use HTTPS outside your local computer. The browser needs service workers, and
-they are only available over HTTPS or on localhost.
+The Vercel configuration publishes public as a static output directory. The
+build copies Scramjet, BareMux, and libcurl browser assets into that directory,
+so browsing requests do not invoke a Vercel serverless function.
 
-Read [Wireproxy](WIREPROXY.md) before enabling IP rotation.
+Use HTTPS outside localhost because service workers require a secure context.

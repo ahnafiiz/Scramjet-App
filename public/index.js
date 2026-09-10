@@ -3,6 +3,12 @@
 const appConfig = window.SCRAMJET_APP_CONFIG || {
 	defaultSettings: { showBlockedImage: false, enableKonamiShortcut: false },
 	quickLinks: [],
+	transport: {
+		endpoints: [],
+		selectEndpoint: () => {
+			throw new Error("No Wisp transport endpoints are configured.");
+		},
+	},
 };
 const storageKey = "classroom-browser-settings";
 const konamiSequence = [
@@ -54,22 +60,55 @@ const state = {
 	tabs: [],
 	activeTabId: null,
 	transportReady: false,
+	transportEndpoint: null,
+	serviceWorkerReady: false,
 	settings: loadSettings(),
 	konamiIndex: 0,
 	konamiTimer: null,
 };
 
-function loadSettings() {
-	const defaults = { ...appConfig.defaultSettings };
-	try {
-		return { ...defaults, ...JSON.parse(localStorage.getItem(storageKey) || "{}") };
-	} catch {
-		return defaults;
+function toBoolean(value, fallback = false) {
+	if (typeof value === "boolean") return value;
+	if (typeof value === "string") {
+		if (["true", "1", "yes", "on"].includes(value.toLowerCase())) return true;
+		if (["false", "0", "no", "off"].includes(value.toLowerCase())) return false;
 	}
+	return fallback;
+}
+
+function loadSettings() {
+	const defaults = {
+		showBlockedImage: toBoolean(appConfig.defaultSettings?.showBlockedImage),
+		enableKonamiShortcut: toBoolean(
+			appConfig.defaultSettings?.enableKonamiShortcut
+		),
+	};
+	let stored = {};
+
+	try {
+		stored = JSON.parse(localStorage.getItem(storageKey) || "{}") || {};
+	} catch {
+		stored = {};
+	}
+
+	return {
+		showBlockedImage: toBoolean(
+			stored.showBlockedImage,
+			defaults.showBlockedImage
+		),
+		enableKonamiShortcut: toBoolean(
+			stored.enableKonamiShortcut,
+			defaults.enableKonamiShortcut
+		),
+	};
 }
 
 function saveSettings() {
-	localStorage.setItem(storageKey, JSON.stringify(state.settings));
+	try {
+		localStorage.setItem(storageKey, JSON.stringify(state.settings));
+	} catch (error) {
+		console.warn("Unable to save browser settings.", error);
+	}
 }
 
 function getActiveTab() {
@@ -77,7 +116,10 @@ function getActiveTab() {
 }
 
 function createId() {
-	return globalThis.crypto?.randomUUID?.() || `tab-${Date.now()}-${Math.random()}`;
+	return (
+		globalThis.crypto?.randomUUID?.() ||
+		"tab-" + Date.now() + "-" + Math.random()
+	);
 }
 
 function getTitleForUrl(url) {
@@ -93,12 +135,21 @@ function setStatus(message) {
 	browserStatus.textContent = message;
 }
 
+function setTabUrl(tab, url) {
+	tab.activeUrl = url;
+	// Keep url as a small compatibility alias for integrations that inspect tabs.
+	tab.url = url;
+}
+
 function createTab() {
+	const history = [];
 	const tab = {
 		id: createId(),
 		title: "New tab",
+		activeUrl: "",
 		url: "",
-		history: [],
+		history,
+		historyStack: history,
 		historyIndex: -1,
 		frame: null,
 	};
@@ -117,8 +168,8 @@ function selectTab(tabId) {
 	}
 
 	homeView.hidden = Boolean(tab.frame);
-	address.value = tab.url;
-	document.title = `${tab.title} - Classroom`;
+	address.value = tab.activeUrl;
+	document.title = tab.title + " - Classroom";
 	setStatus(tab.frame ? "" : "Ready");
 	renderTabs();
 	updateNavigationControls();
@@ -132,14 +183,16 @@ function closeTab(tabId) {
 	if (tab.frame) tab.frame.frame.remove();
 
 	if (state.tabs.length === 0) {
+		state.activeTabId = null;
 		createTab();
 		return;
 	}
 
 	if (state.activeTabId === tabId) {
-		selectTab(state.tabs[Math.max(0, index - 1)].id);
+		selectTab(state.tabs[Math.min(index, state.tabs.length - 1)].id);
 	} else {
 		renderTabs();
+		updateNavigationControls();
 	}
 }
 
@@ -147,7 +200,8 @@ function renderTabs() {
 	tabList.replaceChildren();
 	for (const tab of state.tabs) {
 		const tabButton = document.createElement("button");
-		tabButton.className = `tab${tab.id === state.activeTabId ? " active" : ""}`;
+		tabButton.className =
+			"tab" + (tab.id === state.activeTabId ? " active" : "");
 		tabButton.type = "button";
 		tabButton.role = "tab";
 		tabButton.ariaSelected = String(tab.id === state.activeTabId);
@@ -161,7 +215,7 @@ function renderTabs() {
 		const close = document.createElement("span");
 		close.className = "tab-close";
 		close.dataset.closeTab = tab.id;
-		close.setAttribute("aria-label", `Close ${tab.title}`);
+		close.setAttribute("aria-label", "Close " + tab.title);
 		close.textContent = "x";
 
 		tabButton.append(title, close);
@@ -173,18 +227,50 @@ function updateNavigationControls() {
 	const tab = getActiveTab();
 	backButton.disabled = !tab || tab.historyIndex <= 0;
 	forwardButton.disabled = !tab || tab.historyIndex >= tab.history.length - 1;
-	reloadButton.disabled = !tab?.url;
+	reloadButton.disabled = !tab?.activeUrl;
+}
+
+function getTransportConfig() {
+	return appConfig.transport || appConfig.wisp || { endpoints: [] };
 }
 
 async function ensureTransport() {
 	if (state.transportReady) return;
-	await registerSW();
-
-	const wispUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/wisp/`;
-	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-		await connection.setTransport("/libcurl/index.mjs", [{ websocket: wispUrl }]);
+	if (!state.serviceWorkerReady) {
+		await registerSW();
+		state.serviceWorkerReady = true;
 	}
-	state.transportReady = true;
+
+	const transportConfig = getTransportConfig();
+	const endpoints = Array.isArray(transportConfig.endpoints)
+		? transportConfig.endpoints
+		: [];
+	if (
+		endpoints.length === 0 ||
+		typeof transportConfig.selectEndpoint !== "function"
+	) {
+		throw new Error("No client-side Wisp endpoints are configured.");
+	}
+
+	let lastError;
+	for (let attempt = 0; attempt < endpoints.length; attempt += 1) {
+		const endpoint = transportConfig.selectEndpoint();
+		try {
+			await connection.setTransport("/libcurl/index.mjs", [
+				{ websocket: endpoint },
+			]);
+			state.transportEndpoint = endpoint;
+			state.transportReady = true;
+			return;
+		} catch (error) {
+			lastError = error;
+			console.warn("Unable to use Wisp endpoint " + endpoint + ".", error);
+		}
+	}
+
+	throw (
+		lastError || new Error("Unable to initialize the client-side transport.")
+	);
 }
 
 async function navigateTo(url, options = {}) {
@@ -198,7 +284,7 @@ async function navigateTo(url, options = {}) {
 		if (!tab.frame) {
 			tab.frame = scramjet.createFrame();
 			tab.frame.frame.className = "browser-frame";
-			tab.frame.frame.id = `sj-frame-${tab.id}`;
+			tab.frame.frame.id = "sj-frame-" + tab.id;
 			browserContent.appendChild(tab.frame.frame);
 		}
 
@@ -206,53 +292,71 @@ async function navigateTo(url, options = {}) {
 			tab.history.splice(tab.historyIndex + 1);
 			tab.history.push(url);
 			tab.historyIndex = tab.history.length - 1;
-		} else {
+		} else if (
+			options.historyIndex >= 0 &&
+			options.historyIndex < tab.history.length
+		) {
 			tab.historyIndex = options.historyIndex;
 		}
 
-		tab.url = url;
+		setTabUrl(tab, url);
 		tab.title = getTitleForUrl(url);
 		tab.frame.frame.hidden = false;
 		homeView.hidden = true;
-		address.value = url;
+		address.value = tab.activeUrl;
 		tab.frame.go(url);
 		setStatus("");
-		document.title = `${tab.title} - Classroom`;
+		document.title = tab.title + " - Classroom";
 		renderTabs();
 		updateNavigationControls();
 	} catch (error) {
-		setStatus("Could not open that page. Check that the proxy server is available.");
+		setStatus(
+			"Could not open that page. Check the configured public Wisp endpoint."
+		);
 		console.error(error);
 	}
 }
 
 function goBack() {
 	const tab = getActiveTab();
-	if (tab && tab.historyIndex > 0) navigateTo(tab.history[tab.historyIndex - 1], { historyIndex: tab.historyIndex - 1 });
+	if (tab && tab.historyIndex > 0) {
+		navigateTo(tab.history[tab.historyIndex - 1], {
+			historyIndex: tab.historyIndex - 1,
+		});
+	}
 }
 
 function goForward() {
 	const tab = getActiveTab();
 	if (tab && tab.historyIndex < tab.history.length - 1) {
-		navigateTo(tab.history[tab.historyIndex + 1], { historyIndex: tab.historyIndex + 1 });
+		navigateTo(tab.history[tab.historyIndex + 1], {
+			historyIndex: tab.historyIndex + 1,
+		});
 	}
 }
 
 function reload() {
 	const tab = getActiveTab();
-	if (tab?.url) navigateTo(tab.url, { historyIndex: tab.historyIndex });
+	if (tab?.activeUrl)
+		navigateTo(tab.activeUrl, { historyIndex: tab.historyIndex });
+}
+
+function closeQuickLinksMenu() {
+	quickLinksMenu.hidden = true;
+	quickLinksToggle.setAttribute("aria-expanded", "false");
 }
 
 function renderQuickLinks() {
 	quickLinksMenu.replaceChildren();
 	for (const quickLink of appConfig.quickLinks || []) {
+		if (!quickLink?.label || !quickLink?.url) continue;
 		const link = document.createElement("a");
 		link.href = quickLink.url;
 		link.textContent = quickLink.label;
+		link.dataset.quickLink = quickLink.label;
 		link.addEventListener("click", (event) => {
 			event.preventDefault();
-			quickLinksMenu.hidden = true;
-			quickLinksToggle.setAttribute("aria-expanded", "false");
+			closeQuickLinksMenu();
 			navigateTo(quickLink.url);
 		});
 		quickLinksMenu.append(link);
@@ -260,16 +364,30 @@ function renderQuickLinks() {
 }
 
 function applySettings() {
+	state.settings.showBlockedImage = toBoolean(state.settings.showBlockedImage);
+	state.settings.enableKonamiShortcut = toBoolean(
+		state.settings.enableKonamiShortcut
+	);
 	blockedImageSetting.checked = state.settings.showBlockedImage;
 	konamiSetting.checked = state.settings.enableKonamiShortcut;
-	const showOverlay = state.settings.showBlockedImage;
+
+	const showOverlay = state.settings.showBlockedImage === true;
 	restrictionOverlay.hidden = !showOverlay;
 	restrictionOverlay.setAttribute("aria-hidden", String(!showOverlay));
+	if (!showOverlay) resetKonamiSequence();
 }
 
 function dismissBlockedScreen() {
+	if (restrictionOverlay.hidden) return;
 	restrictionOverlay.hidden = true;
 	restrictionOverlay.setAttribute("aria-hidden", "true");
+	resetKonamiSequence();
+}
+
+function resetKonamiSequence() {
+	state.konamiIndex = 0;
+	clearTimeout(state.konamiTimer);
+	state.konamiTimer = null;
 }
 
 tabList.addEventListener("click", (event) => {
@@ -302,33 +420,32 @@ quickLinksToggle.addEventListener("click", () => {
 });
 
 document.addEventListener("click", (event) => {
-	if (!event.target.closest(".quick-links-control")) {
-		quickLinksMenu.hidden = true;
-		quickLinksToggle.setAttribute("aria-expanded", "false");
-	}
+	if (!event.target.closest(".quick-links-control")) closeQuickLinksMenu();
 });
 
-settingsButton.addEventListener("click", () => settingsDialog.showModal());
+settingsButton.addEventListener("click", () => {
+	if (!settingsDialog.open) settingsDialog.showModal();
+});
 settingsClose.addEventListener("click", () => settingsDialog.close());
 settingsDialog.addEventListener("click", (event) => {
 	if (event.target === settingsDialog) settingsDialog.close();
 });
 
 blockedImageSetting.addEventListener("change", () => {
-	state.settings.showBlockedImage = blockedImageSetting.checked;
+	state.settings.showBlockedImage = blockedImageSetting.checked === true;
 	saveSettings();
 	applySettings();
 });
 
 konamiSetting.addEventListener("change", () => {
-	state.settings.enableKonamiShortcut = konamiSetting.checked;
+	state.settings.enableKonamiShortcut = konamiSetting.checked === true;
 	saveSettings();
 	applySettings();
 });
 
 blockedDismiss.addEventListener("click", dismissBlockedScreen);
 
-document.addEventListener("keydown", (event) => {
+document.addEventListener("keyup", (event) => {
 	if (event.ctrlKey && event.key.toLowerCase() === "l") {
 		event.preventDefault();
 		address.focus();
@@ -336,24 +453,29 @@ document.addEventListener("keydown", (event) => {
 		return;
 	}
 
-	if (!state.settings.enableKonamiShortcut || restrictionOverlay.hidden) return;
-	clearTimeout(state.konamiTimer);
+	if (!state.settings.enableKonamiShortcut || restrictionOverlay.hidden) {
+		resetKonamiSequence();
+		return;
+	}
+
 	const expectedKey = konamiSequence[state.konamiIndex];
-	if (event.key.toLowerCase() === expectedKey.toLowerCase()) {
+	const pressedKey = event.key.toLowerCase();
+	const normalizedExpectedKey = expectedKey.toLowerCase();
+	if (pressedKey === normalizedExpectedKey) {
 		state.konamiIndex += 1;
 		if (state.konamiIndex === konamiSequence.length) {
 			dismissBlockedScreen();
-			state.konamiIndex = 0;
+			return;
 		}
 	} else {
-		state.konamiIndex = 0;
+		state.konamiIndex = pressedKey === konamiSequence[0].toLowerCase() ? 1 : 0;
 	}
 
-	state.konamiTimer = setTimeout(() => {
-		state.konamiIndex = 0;
-	}, 2500);
+	clearTimeout(state.konamiTimer);
+	state.konamiTimer = setTimeout(resetKonamiSequence, 2500);
 });
 
+window.dismissRestrictionOverlay = dismissBlockedScreen;
 renderQuickLinks();
 applySettings();
 createTab();
