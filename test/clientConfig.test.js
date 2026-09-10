@@ -21,3 +21,24 @@ test("browser config exposes the required quick links and client transport", asy
 	assert.equal(config.transport.selectEndpoint(), "wss://wisp.webmc.fun/");
 	assert.equal(Object.isFrozen(config), true);
 });
+
+test("the service worker takes control without a manual refresh", async () => {
+	const source = await readFile(
+		new URL("../public/sw.js", import.meta.url),
+		"utf8"
+	);
+
+	assert.match(source, /self\.skipWaiting\(\)/);
+	assert.match(source, /self\.clients\.claim\(\)/);
+});
+
+test("service-worker registration waits for controller activation", async () => {
+	const source = await readFile(
+		new URL("../public/register-sw.js", import.meta.url),
+		"utf8"
+	);
+
+	assert.match(source, /registration\.update\(\)/);
+	assert.match(source, /controllerchange/);
+	assert.doesNotMatch(source, /Refresh once to activate/);
+});

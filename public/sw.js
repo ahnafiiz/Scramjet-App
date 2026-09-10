@@ -3,6 +3,16 @@ importScripts("/scram/scramjet.all.js");
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
 const scramjet = new ScramjetServiceWorker();
 
+// Take control during the first visit so BareMux can create its MessagePort
+// without asking the user to refresh the page manually.
+self.addEventListener("install", () => {
+	self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+	event.waitUntil(self.clients.claim());
+});
+
 async function handleRequest(event) {
 	await scramjet.loadConfig();
 	if (scramjet.route(event)) {

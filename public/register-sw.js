@@ -21,25 +21,32 @@ async function registerSW() {
 		throw new Error("Your browser doesn't support service workers.");
 	}
 
+	const controllerReady = new Promise((resolve) => {
+		if (navigator.serviceWorker.controller) {
+			resolve();
+			return;
+		}
+
+		navigator.serviceWorker.addEventListener("controllerchange", resolve, {
+			once: true,
+		});
+	});
+
 	const registration = await navigator.serviceWorker.register(stockSW, {
 		updateViaCache: "none",
 	});
 	await navigator.serviceWorker.ready;
 	if (!navigator.serviceWorker.controller) {
-		await new Promise((resolve) => {
-			const timeout = setTimeout(resolve, 1500);
-			navigator.serviceWorker.addEventListener(
-				"controllerchange",
-				() => {
-					clearTimeout(timeout);
-					resolve();
-				},
-				{ once: true }
-			);
-		});
+		// Force an update check when an older service worker is already active.
+		// This also lets the new activate handler claim the current page.
+		await registration.update();
+		await Promise.race([
+			controllerReady,
+			new Promise((resolve) => setTimeout(resolve, 5000)),
+		]);
 	}
 	if (!navigator.serviceWorker.controller) {
-		throw new Error("Refresh once to activate the browser service worker.");
+		throw new Error("The browser service worker could not take control.");
 	}
 	return registration;
 }
