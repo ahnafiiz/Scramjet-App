@@ -22,6 +22,7 @@ const fastify = Fastify({
 		createServer((request, reply) => {
 			reply.setHeader("Cross-Origin-Opener-Policy", "same-origin");
 			reply.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+			reply.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
 			handler(request, reply);
 		}),
 });

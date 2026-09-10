@@ -40,7 +40,6 @@ const quickLinksMenu = document.getElementById("quick-links-menu");
 const settingsButton = document.getElementById("settings-button");
 const settingsDialog = document.getElementById("settings-dialog");
 const settingsClose = document.getElementById("settings-close");
-const blockedImageSetting = document.getElementById("blocked-image-setting");
 const konamiSetting = document.getElementById("konami-setting");
 const restrictionOverlay = document.getElementById("restriction-overlay");
 const blockedDismiss = document.getElementById("blocked-dismiss");
@@ -55,7 +54,7 @@ const scramjet = new ScramjetController({
 });
 scramjet.init();
 
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+let connection = null;
 const state = {
 	tabs: [],
 	activeTabId: null,
@@ -92,10 +91,8 @@ function loadSettings() {
 	}
 
 	return {
-		showBlockedImage: toBoolean(
-			stored.showBlockedImage,
-			defaults.showBlockedImage
-		),
+		// This flag is intentionally code-only. localStorage cannot override it.
+		showBlockedImage: defaults.showBlockedImage,
 		enableKonamiShortcut: toBoolean(
 			stored.enableKonamiShortcut,
 			defaults.enableKonamiShortcut
@@ -105,7 +102,12 @@ function loadSettings() {
 
 function saveSettings() {
 	try {
-		localStorage.setItem(storageKey, JSON.stringify(state.settings));
+		localStorage.setItem(
+			storageKey,
+			JSON.stringify({
+				enableKonamiShortcut: state.settings.enableKonamiShortcut,
+			})
+		);
 	} catch (error) {
 		console.warn("Unable to save browser settings.", error);
 	}
@@ -240,6 +242,8 @@ async function ensureTransport() {
 		await registerSW();
 		state.serviceWorkerReady = true;
 	}
+	if (!connection)
+		connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 
 	const transportConfig = getTransportConfig();
 	const endpoints = Array.isArray(transportConfig.endpoints)
@@ -368,10 +372,9 @@ function applySettings() {
 	state.settings.enableKonamiShortcut = toBoolean(
 		state.settings.enableKonamiShortcut
 	);
-	blockedImageSetting.checked = state.settings.showBlockedImage;
 	konamiSetting.checked = state.settings.enableKonamiShortcut;
 
-	const showOverlay = state.settings.showBlockedImage === true;
+	const showOverlay = toBoolean(appConfig.defaultSettings?.showBlockedImage);
 	restrictionOverlay.hidden = !showOverlay;
 	restrictionOverlay.setAttribute("aria-hidden", String(!showOverlay));
 	if (!showOverlay) resetKonamiSequence();
@@ -429,12 +432,6 @@ settingsButton.addEventListener("click", () => {
 settingsClose.addEventListener("click", () => settingsDialog.close());
 settingsDialog.addEventListener("click", (event) => {
 	if (event.target === settingsDialog) settingsDialog.close();
-});
-
-blockedImageSetting.addEventListener("change", () => {
-	state.settings.showBlockedImage = blockedImageSetting.checked === true;
-	saveSettings();
-	applySettings();
 });
 
 konamiSetting.addEventListener("change", () => {

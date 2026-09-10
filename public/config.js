@@ -2,6 +2,8 @@
 	const publicWispEndpoints = Object.freeze([
 		// Public endpoint documented by the Wisp/libcurl maintainers.
 		"wss://wisp.mercurywork.shop/",
+		// Public fallback endpoint for client-side failover.
+		"wss://wisp.webmc.fun/",
 	]);
 	let endpointCursor = -1;
 
