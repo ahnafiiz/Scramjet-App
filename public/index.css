@@ -2,18 +2,18 @@
 
 :root {
 	color-scheme: dark;
-	--ink: #eef2ff;
-	--muted: #8e9bb8;
-	--canvas: #080b14;
-	--surface: #101626;
-	--surface-2: #151e33;
-	--rail: #0c1120;
-	--line: rgba(160, 174, 214, 0.16);
-	--accent: #8065ff;
-	--accent-soft: rgba(128, 101, 255, 0.16);
-	--cyan: #2dd4bf;
-	--hot: #ffad66;
-	--shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
+	--ink: #e8eaed;
+	--muted: #9aa0a6;
+	--canvas: #202124;
+	--surface: #292a2d;
+	--surface-2: #303134;
+	--rail: #171717;
+	--line: #3c4043;
+	--accent: #8ab4f8;
+	--accent-soft: rgba(138, 180, 248, 0.14);
+	--cyan: #8ab4f8;
+	--hot: #fdd663;
+	--shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
 	font-family: "DM Sans", "Inter", "Poppins", "Montserrat", sans-serif;
 }
 * {
@@ -43,7 +43,7 @@ button:disabled {
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
-	outline: 3px solid rgba(128, 101, 255, 0.45);
+	outline: 3px solid rgba(138, 180, 248, 0.45);
 	outline-offset: 2px;
 }
 [hidden] {
@@ -59,10 +59,9 @@ a:focus-visible {
 .browser-chrome {
 	position: relative;
 	z-index: 10;
-	background: rgba(12, 17, 32, 0.94);
+	background: var(--rail);
 	border-bottom: 1px solid var(--line);
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-	backdrop-filter: blur(18px);
 }
 .tab-strip {
 	display: flex;
@@ -115,8 +114,7 @@ a:focus-visible {
 	right: 18px;
 	height: 2px;
 	border-radius: 0 0 4px 4px;
-	background: linear-gradient(90deg, var(--accent), var(--cyan));
-	box-shadow: 0 0 14px rgba(128, 101, 255, 0.7);
+	background: var(--accent);
 	content: "";
 }
 .tab-title {
@@ -172,7 +170,7 @@ a:focus-visible {
 	min-height: 58px;
 	gap: 9px;
 	padding: 9px 12px;
-	background: rgba(16, 22, 38, 0.9);
+	background: var(--surface);
 }
 .navigation-controls {
 	display: flex;
@@ -187,7 +185,7 @@ a:focus-visible {
 	padding: 0 15px;
 	border: 1px solid var(--line);
 	border-radius: 10px;
-	background: rgba(8, 11, 20, 0.72);
+	background: #202124;
 	color: var(--ink);
 	font-size: 14px;
 	transition:
@@ -213,7 +211,7 @@ a:focus-visible {
 	padding: 0 12px;
 	border: 1px solid var(--line);
 	border-radius: 9px;
-	background: rgba(255, 255, 255, 0.04);
+	background: #303134;
 	color: var(--ink);
 	font-size: 13px;
 	font-weight: 600;
@@ -241,9 +239,8 @@ a:focus-visible {
 	padding: 7px;
 	border: 1px solid var(--line);
 	border-radius: 12px;
-	background: rgba(16, 22, 38, 0.98);
+	background: #292a2d;
 	box-shadow: var(--shadow);
-	backdrop-filter: blur(18px);
 	animation: menu-in 160ms ease both;
 }
 .quick-links-menu a {
@@ -276,28 +273,13 @@ a:focus-visible {
 	min-height: 100%;
 	padding: 28px;
 	text-align: center;
-	background:
-		radial-gradient(
-			circle at 50% 38%,
-			rgba(128, 101, 255, 0.13),
-			transparent 31%
-		),
-		radial-gradient(
-			circle at 82% 84%,
-			rgba(45, 212, 191, 0.08),
-			transparent 30%
-		),
-		var(--canvas);
+	background: var(--canvas);
 	overflow: hidden;
 }
 .home-view::before {
 	position: absolute;
 	inset: 0;
-	background-image:
-		linear-gradient(rgba(142, 155, 184, 0.045) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(142, 155, 184, 0.045) 1px, transparent 1px);
-	background-size: 42px 42px;
-	mask-image: linear-gradient(to bottom, black, transparent 82%);
+	display: none;
 	content: "";
 	pointer-events: none;
 }
@@ -308,19 +290,17 @@ a:focus-visible {
 	z-index: 1;
 }
 .home-logo {
-	width: min(156px, 38vw);
+	width: min(112px, 30vw);
 	height: auto;
 	margin-bottom: 20px;
-	filter: drop-shadow(0 18px 26px rgba(128, 101, 255, 0.28));
-	animation: logo-float 5s ease-in-out infinite;
 }
 .home-view h1 {
 	margin: 0;
 	color: var(--ink);
 	font-family: "Space Grotesk", "DM Sans", sans-serif;
-	font-size: clamp(31px, 5vw, 52px);
-	font-weight: 700;
-	letter-spacing: -0.045em;
+	font-size: clamp(28px, 4vw, 36px);
+	font-weight: 600;
+	letter-spacing: -0.025em;
 }
 .browser-status {
 	min-height: 22px;
@@ -334,7 +314,7 @@ a:focus-visible {
 	width: 100%;
 	height: 100%;
 	border: 0;
-	background: #080b14;
+	background: #202124;
 	animation: frame-in 280ms ease both;
 }
 

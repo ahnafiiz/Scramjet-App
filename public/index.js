@@ -44,17 +44,9 @@ const konamiSetting = document.getElementById("konami-setting");
 const restrictionOverlay = document.getElementById("restriction-overlay");
 const blockedDismiss = document.getElementById("blocked-dismiss");
 
-const { ScramjetController } = $scramjetLoadController();
-const scramjet = new ScramjetController({
-	files: {
-		wasm: "/scram/scramjet.wasm.wasm",
-		all: "/scram/scramjet.all.js",
-		sync: "/scram/scramjet.sync.js",
-	},
-});
-scramjet.init();
-
-let connection = null;
+const { Controller } = $scramjetController;
+let controller = null;
+let transport = null;
 const state = {
 	tabs: [],
 	activeTabId: null,
@@ -166,7 +158,8 @@ function selectTab(tabId) {
 
 	state.activeTabId = tabId;
 	for (const candidate of state.tabs) {
-		if (candidate.frame) candidate.frame.frame.hidden = candidate.id !== tabId;
+		if (candidate.frame)
+			candidate.frame.element.hidden = candidate.id !== tabId;
 	}
 
 	homeView.hidden = Boolean(tab.frame);
@@ -182,7 +175,7 @@ function closeTab(tabId) {
 	if (index === -1) return;
 
 	const [tab] = state.tabs.splice(index, 1);
-	if (tab.frame) tab.frame.frame.remove();
+	if (tab.frame) tab.frame.element.remove();
 
 	if (state.tabs.length === 0) {
 		state.activeTabId = null;
@@ -242,8 +235,12 @@ async function ensureTransport() {
 		await registerSW();
 		state.serviceWorkerReady = true;
 	}
-	if (!connection)
-		connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+	const serviceWorker = navigator.serviceWorker.controller;
+	if (!serviceWorker) {
+		throw new Error(
+			"The browser service worker is not controlling this page yet. Refresh once and try again."
+		);
+	}
 
 	const transportConfig = getTransportConfig();
 	const endpoints = Array.isArray(transportConfig.endpoints)
@@ -260,9 +257,27 @@ async function ensureTransport() {
 	for (let attempt = 0; attempt < endpoints.length; attempt += 1) {
 		const endpoint = transportConfig.selectEndpoint();
 		try {
-			await connection.setTransport("/libcurl/index.mjs", [
-				{ websocket: endpoint },
-			]);
+			const transportModule = window.EpoxyTransport;
+			const EpoxyTransport =
+				transportModule?.default ||
+				transportModule?.EpoxyTransport ||
+				transportModule;
+			if (typeof EpoxyTransport !== "function") {
+				throw new Error("The Scramjet v2 transport bundle did not load.");
+			}
+			transport = new EpoxyTransport({ wisp: endpoint });
+			controller = new Controller({
+				serviceworker: serviceWorker,
+				transport,
+				config: {
+					prefix: "/~/sj/",
+					scramjetPath: "/scramjet/scramjet.js",
+					injectPath: "/controller/controller.inject.js",
+					wasmPath: "/scramjet/scramjet.wasm",
+					virtualWasmPath: "scramjet.wasm.js",
+				},
+			});
+			await controller.wait();
 			state.transportEndpoint = endpoint;
 			state.transportReady = true;
 			return;
@@ -286,10 +301,11 @@ async function navigateTo(url, options = {}) {
 		await ensureTransport();
 
 		if (!tab.frame) {
-			tab.frame = scramjet.createFrame();
-			tab.frame.frame.className = "browser-frame";
-			tab.frame.frame.id = "sj-frame-" + tab.id;
-			browserContent.appendChild(tab.frame.frame);
+			const frameElement = document.createElement("iframe");
+			tab.frame = controller.createFrame(frameElement);
+			tab.frame.element.className = "browser-frame";
+			tab.frame.element.id = "sj-frame-" + tab.id;
+			browserContent.appendChild(tab.frame.element);
 		}
 
 		if (options.historyIndex == null) {
@@ -305,7 +321,7 @@ async function navigateTo(url, options = {}) {
 
 		setTabUrl(tab, url);
 		tab.title = getTitleForUrl(url);
-		tab.frame.frame.hidden = false;
+		tab.frame.element.hidden = false;
 		homeView.hidden = true;
 		address.value = tab.activeUrl;
 		tab.frame.go(url);

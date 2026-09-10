@@ -5,13 +5,19 @@ import { fileURLToPath } from "node:url";
 
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
-import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
-import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 const publicPath = path.join(projectRoot, "public");
+const controllerPath = path.resolve(
+	projectRoot,
+	"node_modules/@mercuryworkshop/scramjet-controller/dist"
+);
+const epoxyPath = path.resolve(
+	projectRoot,
+	"node_modules/@mercuryworkshop/epoxy-transport/dist"
+);
 const port = Number.parseInt(process.env.PORT || "8080", 10);
 
 // This server is only a local development asset server. Browsing traffic is
@@ -34,19 +40,19 @@ await fastify.register(fastifyStatic, {
 
 await fastify.register(fastifyStatic, {
 	root: scramjetPath,
-	prefix: "/scram/",
+	prefix: "/scramjet/",
 	decorateReply: false,
 });
 
 await fastify.register(fastifyStatic, {
-	root: libcurlPath,
-	prefix: "/libcurl/",
+	root: controllerPath,
+	prefix: "/controller/",
 	decorateReply: false,
 });
 
 await fastify.register(fastifyStatic, {
-	root: baremuxPath,
-	prefix: "/baremux/",
+	root: epoxyPath,
+	prefix: "/epoxy/",
 	decorateReply: false,
 });
 

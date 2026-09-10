@@ -7,9 +7,10 @@
 		<title>Classroom</title>
 		<link rel="icon" href="favicon.ico" />
 		<link rel="stylesheet" href="index.css" />
-		<!-- Load the core components immediately -->
-		<script src="/baremux/index.js"></script>
-		<script src="/scram/scramjet.all.js" defer></script>
+		<!-- Scramjet v2 runtime, controller, and matching Wisp transport. -->
+		<script src="/scramjet/scramjet_bundled.js"></script>
+		<script src="/controller/controller.api.js"></script>
+		<script src="/epoxy/index.js"></script>
 
 		<!-- Load your local logic sequentially via defer -->
 		<script src="config.js" defer></script>
