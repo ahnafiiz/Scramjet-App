@@ -456,6 +456,8 @@ function BrowserApp({ onRoute }) {
 						<Icon name="globe" size={14} />
 					</span>
 					<input
+						id="address-input"
+						name="address"
 						value={address}
 						onChange={(event) => setAddress(event.target.value)}
 						placeholder="Search or enter an address"
@@ -562,7 +564,55 @@ function HomeView({ identity, status, onSearch, onQuickLink }) {
 					</button>
 				))}
 			</div>
+			<ChangeLog />
 		</div>
+	);
+}
+
+function ChangeLog() {
+	const [expandedVersion, setExpandedVersion] = useState(null);
+	return (
+		<section className="change-log" aria-labelledby="change-log-heading">
+			<div className="change-log-heading">
+				<div>
+					<p className="section-label">What’s new</p>
+					<h2 id="change-log-heading">Change log</h2>
+				</div>
+				<span className="change-log-hint">Scroll for updates</span>
+			</div>
+			<div className="change-log-track">
+				{appConfig.changeLog.map((entry) => {
+					const expanded = expandedVersion === entry.version;
+					return (
+						<article
+							className={`change-card${expanded ? " expanded" : ""}`}
+							key={entry.version}
+						>
+							<button
+								className="change-card-toggle"
+								aria-expanded={expanded}
+								onClick={() =>
+									setExpandedVersion(expanded ? null : entry.version)
+								}
+							>
+								<span className="change-card-version">v{entry.version}</span>
+								<span className="change-card-date">{entry.date}</span>
+								<Icon name={expanded ? "chevronDown" : "arrow"} size={13} />
+							</button>
+							<h3>{entry.title}</h3>
+							<p>{entry.summary}</p>
+							{expanded && (
+								<ul>
+									{entry.details.map((detail) => (
+										<li key={detail}>{detail}</li>
+									))}
+								</ul>
+							)}
+						</article>
+					);
+				})}
+			</div>
+		</section>
 	);
 }
 
@@ -683,7 +733,10 @@ function BlockedPage({ onHome }) {
 			<div className="blocked-noise" />
 			<div className="blocked-card view-enter">
 				<span className="blocked-kicker">Access paused</span>
-				<img src={asset} alt="Access restricted" />
+				<img
+					src={asset.src}
+					alt={asset.alt || asset.name || "Access restricted"}
+				/>
 				<h1>
 					This space is closed
 					<br />
@@ -697,7 +750,7 @@ function BlockedPage({ onHome }) {
 					Return home
 				</button>
 				<span className="blocked-reference">
-					Reference · {asset.split("/").pop()}
+					{asset.name || "Blocked asset"} · {asset.src.split("/").pop()}
 				</span>
 			</div>
 		</div>
@@ -795,7 +848,10 @@ function AdminDashboard() {
 					<div>
 						<p className="eyebrow">Control room</p>
 						<h1>Device protection</h1>
-						<p>Review anonymous sessions and keep access fair.</p>
+						<p>
+							Review anonymous sessions and keep access fair. Device and session
+							codes distinguish repeat visitors without storing names.
+						</p>
 					</div>
 					<button className="outline-button" onClick={loadDevices}>
 						<Icon name="reload" size={13} /> Refresh
@@ -825,8 +881,8 @@ function AdminDashboard() {
 				</section>
 				<section className="device-table">
 					<div className="table-heading">
-						<span>Anonymous device</span>
-						<span>Session</span>
+						<span>Device / label</span>
+						<span>Latest session</span>
 						<span>Last seen</span>
 						<span>Status</span>
 						<span>Action</span>
@@ -837,12 +893,17 @@ function AdminDashboard() {
 						devices.map((device) => (
 							<div className="device-row" key={device.id}>
 								<div>
-									<strong>{device.device_label || "Anonymous device"}</strong>
+									<strong>{device.device_code || "Unknown device"}</strong>
+									<small>{device.device_label || "Anonymous device"}</small>
+								</div>
+								<div>
+									<strong>
+										{device.latest_session_name || "No active name"}
+									</strong>
 									<small>
-										{device.id.slice(0, 8)}…{device.id.slice(-6)}
+										{device.latest_session_code || "No session code"}
 									</small>
 								</div>
-								<span>{device.latest_session_name || "No name"}</span>
 								<span>{formatDate(device.last_seen_at)}</span>
 								<span
 									className={
@@ -902,6 +963,8 @@ function AdminLogin({ configured }) {
 						<label>
 							Email
 							<input
+								id="admin-email"
+								name="email"
 								type="email"
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
@@ -911,6 +974,8 @@ function AdminLogin({ configured }) {
 						<label>
 							Password
 							<input
+								id="admin-password"
+								name="password"
 								type="password"
 								value={password}
 								onChange={(event) => setPassword(event.target.value)}

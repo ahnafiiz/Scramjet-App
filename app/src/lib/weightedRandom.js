@@ -8,7 +8,10 @@ export function weightedRandom(items, randomSource = secureRandom) {
 	const validItems = items.filter(
 		(item) => item && Number.isFinite(item.weight) && item.weight > 0
 	);
-	const totalWeight = validItems.reduce((total, item) => total + item.weight, 0);
+	const totalWeight = validItems.reduce(
+		(total, item) => total + item.weight,
+		0
+	);
 
 	if (!validItems.length || totalWeight <= 0) {
 		throw new Error("Weighted selection needs at least one positive weight.");
@@ -30,5 +33,5 @@ function secureRandom() {
 }
 
 export function chooseBlockedAsset(assets) {
-	return weightedRandom(assets).src;
+	return weightedRandom(assets);
 }

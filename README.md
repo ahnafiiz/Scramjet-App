@@ -52,6 +52,12 @@ VERCEL_PREVIEW_FEEDBACK_ENABLED=0
 
 Redeploy after changing the variable. The toolbar can also be disabled from the Vercel team or project settings.
 
+## Browser audit notes
+
+- Address-bar and admin-login inputs have explicit `id` and `name` attributes.
+- Classroom source does not call `eval`. If an eval warning remains, inspect the reported script URL first; Scramjet/libcurl or an injected preview tool may be the source. Do not add `unsafe-eval` blindly.
+- Vercel responses already include `Cross-Origin-Resource-Policy: cross-origin`, which is required for the browser runtime's cross-origin assets. Changing it to `same-origin` can break Scramjet resources.
+
 ## UI and service links
 
 - Global styling lives in `app/src/styles.css`.

@@ -2,7 +2,8 @@ import { requireAdmin, sendJson } from "../_lib/supabase.js";
 
 export default async function handler(request, response) {
 	const access = await requireAdmin(request);
-	if (access.error) return sendJson(response, access.status, { error: access.error });
+	if (access.error)
+		return sendJson(response, access.status, { error: access.error });
 
 	try {
 		if (request.method === "GET") {
@@ -16,25 +17,33 @@ export default async function handler(request, response) {
 			const { data: sessions, error: sessionsError } = ids.length
 				? await access.supabase
 						.from("browser_sessions")
-						.select("device_id,fake_name,last_seen_at")
+						.select("device_id,session_id,fake_name,last_seen_at")
 						.in("device_id", ids)
 						.order("last_seen_at", { ascending: false })
 				: { data: [], error: null };
 			if (sessionsError) throw sessionsError;
 			const latestSession = new Map();
 			for (const session of sessions || []) {
-				if (!latestSession.has(session.device_id)) latestSession.set(session.device_id, session);
+				if (!latestSession.has(session.device_id))
+					latestSession.set(session.device_id, session);
 			}
 			return sendJson(response, 200, {
 				devices: (devices || []).map((device) => ({
 					...device,
+					device_code: shortCode("D", device.id),
 					latest_session_name: latestSession.get(device.id)?.fake_name || null,
+					latest_session_code: latestSession.get(device.id)
+						? shortCode("S", latestSession.get(device.id).session_id)
+						: null,
 				})),
 			});
 		}
 
 		if (request.method === "PATCH") {
-			const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+			const body =
+				typeof request.body === "string"
+					? JSON.parse(request.body)
+					: request.body || {};
 			if (!body.deviceId || typeof body.isBanned !== "boolean") {
 				return sendJson(response, 400, { error: "Invalid ban update." });
 			}
@@ -54,6 +63,12 @@ export default async function handler(request, response) {
 		return sendJson(response, 405, { error: "Method not allowed." });
 	} catch (error) {
 		console.error("Admin device operation failed", error);
-		return sendJson(response, 500, { error: "Unable to update the device registry." });
+		return sendJson(response, 500, {
+			error: "Unable to update the device registry.",
+		});
 	}
+}
+
+function shortCode(prefix, value) {
+	return `${prefix}-${String(value).replaceAll("-", "").slice(0, 8).toUpperCase()}`;
 }
