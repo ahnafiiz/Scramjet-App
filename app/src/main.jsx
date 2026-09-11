@@ -59,6 +59,7 @@ function BrowserApp({ onRoute }) {
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [isReloading, setIsReloading] = useState(false);
 	const [status, setStatus] = useState("Ready when you are");
+	const [theme, setTheme] = useState(readTheme);
 	const [access, setAccess] = useState({ state: "checking" });
 	const [consent, setConsentState] = useState(() =>
 		getConsent(appConfig.fingerprint.consentKey)
@@ -71,6 +72,15 @@ function BrowserApp({ onRoute }) {
 	routeRef.current = onRoute;
 
 	const activeTab = tabs.find((tab) => tab.id === activeTabId) || tabs[0];
+
+	useEffect(() => {
+		document.documentElement.dataset.theme = theme;
+		try {
+			localStorage.setItem("classroom-theme", theme);
+		} catch {
+			// Storage can be disabled in private browsing; the visual preference still applies.
+		}
+	}, [theme]);
 
 	useEffect(() => {
 		if (activeTab) setAddress(activeTab.url || "");
@@ -231,8 +241,9 @@ function BrowserApp({ onRoute }) {
 				</div>
 				<div className="window-title">Home - Classroom</div>
 				<div className="header-actions">
-					<button className="quiet-button" onClick={() => onRoute("/admin")}>
-						<span className="lock-glyph">⌁</span> Admin
+					<span className="origin-status">Stable workspace</span>
+					<button className="round-button" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+						{theme === "dark" ? "☼" : "☾"}
 					</button>
 					<button
 						className="round-button"
@@ -283,7 +294,7 @@ function BrowserApp({ onRoute }) {
 			</main>
 
 			{consent === null && <ConsentBanner onAccept={acceptConsent} onDecline={declineConsent} />}
-			{settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} identity={identity} />}
+			{settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} identity={identity} theme={theme} onThemeChange={setTheme} />}
 		</div>
 	);
 }
@@ -291,10 +302,10 @@ function BrowserApp({ onRoute }) {
 function HomeView({ identity, status, onSearch, onQuickLink }) {
 	return (
 		<div className="home-view view-enter">
-			<div className="home-art" aria-hidden="true"><div className="orbit orbit-one" /><div className="orbit orbit-two" /><div className="home-core"><span /></div></div>
-			<p className="eyebrow">A calmer corner of the web</p>
-			<h1>Make room for<br /><em>better focus.</em></h1>
-			<p className="home-copy">A private browser workspace for the tabs<br className="desktop-break" /> that help you get things done.</p>
+			<img className="home-logo" src="/sj.png" alt="Classroom" />
+			<p className="eyebrow">Your browser, kept simple</p>
+			<h1>Search the web.</h1>
+			<p className="home-copy">A compact workspace for the tabs<br className="desktop-break" /> you use every day.</p>
 			<form className="home-search" onSubmit={(event) => { event.preventDefault(); onSearch(event.currentTarget.elements.query.value); }}>
 				<span>⌕</span><input name="query" placeholder="Search with Google or enter a URL" autoComplete="off" /><button type="submit">Open</button>
 			</form>
@@ -312,8 +323,8 @@ function ConsentBanner({ onAccept, onDecline }) {
 	return <aside className="consent-banner"><div className="consent-icon">◌</div><div><strong>Help keep Classroom safe</strong><p>We use a one-way, anonymous device signal to enforce bans. No raw device details are stored.</p></div><div className="consent-actions"><button className="text-button" onClick={onDecline}>Not now</button><button className="solid-button" onClick={onAccept}>Allow protection</button></div></aside>;
 }
 
-function SettingsPanel({ onClose, identity }) {
-	return <div className="overlay-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><aside className="side-panel" role="dialog" aria-modal="true" aria-labelledby="settings-heading"><div className="panel-top"><div><p className="eyebrow">Workspace</p><h2 id="settings-heading">Settings</h2></div><button className="close-button" onClick={onClose}>×</button></div><div className="settings-section"><p className="section-label">Your session</p><div className="identity-card"><span className="avatar-mark">{identity.fakeName.slice(-2)}</span><div><strong>{identity.fakeName}</strong><span>Anonymous session</span></div><i>Protected</i></div></div><div className="settings-section"><p className="section-label">About privacy</p><p className="settings-note">Classroom never needs your real name or email to open a tab. Device protection is opt-in and uses a one-way identifier.</p></div><div className="panel-footer"><span>Home - Classroom</span><span>v1 runtime</span></div></aside></div>;
+function SettingsPanel({ onClose, identity, theme, onThemeChange }) {
+	return <div className="overlay-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><aside className="side-panel" role="dialog" aria-modal="true" aria-labelledby="settings-heading"><div className="panel-top"><div><p className="eyebrow">Workspace</p><h2 id="settings-heading">Settings</h2></div><button className="close-button" onClick={onClose}>×</button></div><div className="settings-section"><p className="section-label">Your session</p><div className="identity-card"><span className="avatar-mark">{identity.fakeName.slice(-2)}</span><div><strong>{identity.fakeName}</strong><span>Anonymous session</span></div><i>Protected</i></div></div><div className="settings-section"><p className="section-label">Appearance</p><div className="theme-picker"><button className={theme === "dark" ? "theme-option selected" : "theme-option"} onClick={() => onThemeChange("dark")}>Dark</button><button className={theme === "light" ? "theme-option selected" : "theme-option"} onClick={() => onThemeChange("light")}>Light</button></div></div><div className="settings-section"><p className="section-label">About privacy</p><p className="settings-note">Classroom never needs your real name or email to open a tab. Device protection is opt-in and uses a one-way identifier.</p></div><div className="panel-footer"><span>Home - Classroom</span><span>v1 runtime</span></div></aside></div>;
 }
 
 function BlockedPage({ onHome }) {
@@ -419,6 +430,14 @@ function titleFor(url) {
 
 function formatDate(date) {
 	return date ? new Date(date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
+}
+
+function readTheme() {
+	try {
+		return localStorage.getItem("classroom-theme") || "dark";
+	} catch {
+		return "dark";
+	}
 }
 
 createRoot(document.getElementById("app")).render(<App />);
