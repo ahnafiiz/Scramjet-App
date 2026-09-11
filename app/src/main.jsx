@@ -235,7 +235,7 @@ function BrowserApp({ onRoute }) {
 		<div className="app-frame">
 			<header className="browser-header">
 				<div className="brand-lockup" aria-label="Classroom home">
-					<span className="brand-mark"><span /></span>
+					<img className="brand-mark-image" src="/sj.png" alt="" />
 					<span className="brand-name">classroom</span>
 					<span className="brand-version">beta</span>
 				</div>
@@ -333,7 +333,7 @@ function BlockedPage({ onHome }) {
 }
 
 function LoadingScreen() {
-	return <div className="loading-screen"><span className="brand-mark"><span /></span><p>Preparing your workspace</p></div>;
+	return <div className="loading-screen"><img className="brand-mark-image" src="/sj.png" alt="" /><p>Preparing your workspace</p></div>;
 }
 
 function AdminApp() {
@@ -387,7 +387,7 @@ function AdminDashboard() {
 	}
 
 	if (!session) return <AdminLogin configured={Boolean(supabase)} />;
-	return <div className="admin-page"><header className="admin-header"><div className="brand-lockup"><span className="brand-mark"><span /></span><span className="brand-name">classroom</span><span className="brand-version">admin</span></div><div className="admin-user">{session.user.email}<button className="quiet-button" onClick={() => supabase.auth.signOut()}>Sign out</button></div></header><main className="admin-main"><div className="admin-intro"><div><p className="eyebrow">Control room</p><h1>Device protection</h1><p>Review anonymous sessions and keep access fair.</p></div><button className="outline-button" onClick={loadDevices}>↻ Refresh</button></div>{error && <div className="admin-error">{error}</div>}<section className="admin-stats"><div><span>Tracked devices</span><strong>{devices.length}</strong></div><div><span>Active bans</span><strong>{devices.filter((device) => device.is_banned).length}</strong></div><div><span>Last updated</span><strong>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div></section><section className="device-table"><div className="table-heading"><span>Anonymous device</span><span>Session</span><span>Last seen</span><span>Status</span><span>Action</span></div>{loading ? <div className="table-empty">Loading registry…</div> : devices.length ? devices.map((device) => <div className="device-row" key={device.id}><div><strong>{device.device_label || "Anonymous device"}</strong><small>{device.id.slice(0, 8)}…{device.id.slice(-6)}</small></div><span>{device.latest_session_name || "No name"}</span><span>{formatDate(device.last_seen_at)}</span><span className={device.is_banned ? "status-banned" : "status-clear"}>{device.is_banned ? "Banned" : "Clear"}</span><button className={device.is_banned ? "outline-button" : "danger-button"} onClick={() => toggleBan(device)}>{device.is_banned ? "Restore" : "Ban"}</button></div>) : <div className="table-empty">No devices have checked in yet.</div>}</section></main></div>;
+	return <div className="admin-page"><header className="admin-header"><div className="brand-lockup"><img className="brand-mark-image" src="/sj.png" alt="" /><span className="brand-name">classroom</span><span className="brand-version">admin</span></div><div className="admin-user">{session.user.email}<button className="quiet-button" onClick={() => supabase.auth.signOut()}>Sign out</button></div></header><main className="admin-main"><div className="admin-intro"><div><p className="eyebrow">Control room</p><h1>Device protection</h1><p>Review anonymous sessions and keep access fair.</p></div><button className="outline-button" onClick={loadDevices}>↻ Refresh</button></div>{error && <div className="admin-error">{error}</div>}<section className="admin-stats"><div><span>Tracked devices</span><strong>{devices.length}</strong></div><div><span>Active bans</span><strong>{devices.filter((device) => device.is_banned).length}</strong></div><div><span>Last updated</span><strong>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div></section><section className="device-table"><div className="table-heading"><span>Anonymous device</span><span>Session</span><span>Last seen</span><span>Status</span><span>Action</span></div>{loading ? <div className="table-empty">Loading registry…</div> : devices.length ? devices.map((device) => <div className="device-row" key={device.id}><div><strong>{device.device_label || "Anonymous device"}</strong><small>{device.id.slice(0, 8)}…{device.id.slice(-6)}</small></div><span>{device.latest_session_name || "No name"}</span><span>{formatDate(device.last_seen_at)}</span><span className={device.is_banned ? "status-banned" : "status-clear"}>{device.is_banned ? "Banned" : "Clear"}</span><button className={device.is_banned ? "outline-button" : "danger-button"} onClick={() => toggleBan(device)}>{device.is_banned ? "Restore" : "Ban"}</button></div>) : <div className="table-empty">No devices have checked in yet.</div>}</section></main></div>;
 }
 
 function AdminLogin({ configured }) {
@@ -400,7 +400,7 @@ function AdminLogin({ configured }) {
 		const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 		if (signInError) setError(signInError.message);
 	}
-	return <div className="admin-page"><div className="login-card"><div className="brand-lockup"><span className="brand-mark"><span /></span><span className="brand-name">classroom</span></div><p className="eyebrow">Restricted area</p><h1>Sign in to control room</h1>{!configured ? <p className="admin-error">Supabase is not configured. Add the Vercel environment variables before using admin access.</p> : <form onSubmit={signIn}><label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <p className="form-error">{error}</p>}<button className="solid-button" type="submit">Sign in securely</button></form>}</div></div>;
+	return <div className="admin-page"><div className="login-card"><div className="brand-lockup"><img className="brand-mark-image" src="/sj.png" alt="" /><span className="brand-name">classroom</span></div><p className="eyebrow">Restricted area</p><h1>Sign in to control room</h1>{!configured ? <p className="admin-error">Supabase is not configured. Add the Vercel environment variables before using admin access.</p> : <form onSubmit={signIn}><label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <p className="form-error">{error}</p>}<button className="solid-button" type="submit">Sign in securely</button></form>}</div></div>;
 }
 
 function makeTab() {
