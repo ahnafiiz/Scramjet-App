@@ -14,6 +14,116 @@ import "./styles.css";
 
 const APP_TITLE = "Home - Classroom";
 
+const iconPaths = {
+	back: (
+		<>
+			<path d="m15 18-6-6 6-6" />
+			<path d="M9 12h10" />
+		</>
+	),
+	forward: (
+		<>
+			<path d="m9 18 6-6-6-6" />
+			<path d="M15 12H5" />
+		</>
+	),
+	reload: (
+		<>
+			<path d="M20 11a8 8 0 1 0 2 5" />
+			<path d="M20 4v7h-7" />
+		</>
+	),
+	search: (
+		<>
+			<circle cx="11" cy="11" r="6.5" />
+			<path d="m16 16 4 4" />
+		</>
+	),
+	globe: (
+		<>
+			<circle cx="12" cy="12" r="8.5" />
+			<path d="M3.8 12h16.4M12 3.5c2.1 2.3 3.1 5.1 3.1 8.5s-1 6.2-3.1 8.5c-2.1-2.3-3.1-5.1-3.1-8.5s1-6.2 3.1-8.5Z" />
+		</>
+	),
+	settings: (
+		<>
+			<path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
+			<path d="m19.4 15 .1.1-1.7 2.9-.2-.1a2.2 2.2 0 0 0-2.2 0l-.2.1-1.7-2.9.1-.1a2.2 2.2 0 0 0 0-2.1l-.1-.2 1.7-2.9.2.1a2.2 2.2 0 0 0 2.2 0l.2-.1 1.7 2.9-.1.2a2.2 2.2 0 0 0 0 2.1Z" />
+			<path d="m6.6 15-.1.1 1.7 2.9.2-.1a2.2 2.2 0 0 1 2.2 0l.2.1 1.7-2.9-.1-.1a2.2 2.2 0 0 1 0-2.1l.1-.2-1.7-2.9-.2.1a2.2 2.2 0 0 1-2.2 0l-.2-.1-1.7 2.9.1.2a2.2 2.2 0 0 1 0 2.1Z" />
+		</>
+	),
+	sun: (
+		<>
+			<circle cx="12" cy="12" r="3.5" />
+			<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+		</>
+	),
+	moon: <path d="M20.5 15.4A8.5 8.5 0 0 1 8.6 3.5 8.5 8.5 0 1 0 20.5 15.4Z" />,
+	chevronDown: <path d="m6 9 6 6 6-6" />,
+	grid: (
+		<>
+			<rect x="4" y="4" width="6" height="6" rx="1" />
+			<rect x="14" y="4" width="6" height="6" rx="1" />
+			<rect x="4" y="14" width="6" height="6" rx="1" />
+			<rect x="14" y="14" width="6" height="6" rx="1" />
+		</>
+	),
+	external: (
+		<>
+			<path d="M14 5h5v5" />
+			<path d="m19 5-8 8" />
+			<path d="M19 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h4" />
+		</>
+	),
+	shield: (
+		<path d="M12 3 5.5 6v5.2c0 4.1 2.6 7.2 6.5 8.8 3.9-1.6 6.5-4.7 6.5-8.8V6L12 3Z" />
+	),
+	arrow: (
+		<>
+			<path d="M5 12h13" />
+			<path d="m13 6 6 6-6 6" />
+		</>
+	),
+};
+
+function Icon({ name, size = 16, strokeWidth = 1.8 }) {
+	return (
+		<svg
+			className="ui-icon"
+			width={size}
+			height={size}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth={strokeWidth}
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			{iconPaths[name]}
+		</svg>
+	);
+}
+
+function ServiceLogo({ link }) {
+	return (
+		<span className="service-logo" style={{ "--service-color": link.color }}>
+			<img
+				src={link.icon}
+				alt=""
+				loading="lazy"
+				onError={(event) => {
+					event.currentTarget.hidden = true;
+					event.currentTarget.nextElementSibling.hidden = false;
+				}}
+			/>
+			<span className="service-fallback" hidden aria-hidden="true">
+				{link.glyph}
+			</span>
+		</span>
+	);
+}
+
 function useRoute() {
 	const [route, setRoute] = useState(window.location.pathname);
 
@@ -23,10 +133,13 @@ function useRoute() {
 		return () => window.removeEventListener("popstate", onPopState);
 	}, []);
 
-	return [route, (nextRoute) => {
-		window.history.pushState({}, "", nextRoute);
-		setRoute(nextRoute);
-	}];
+	return [
+		route,
+		(nextRoute) => {
+			window.history.pushState({}, "", nextRoute);
+			setRoute(nextRoute);
+		},
+	];
 }
 
 function App() {
@@ -51,9 +164,16 @@ function BrowserApp({ onRoute }) {
 	});
 	const { tabs, activeTabId } = browserState;
 	const setTabs = (nextTabs) =>
-		setBrowserState((current) => ({ ...current, tabs: typeof nextTabs === "function" ? nextTabs(current.tabs) : nextTabs }));
+		setBrowserState((current) => ({
+			...current,
+			tabs: typeof nextTabs === "function" ? nextTabs(current.tabs) : nextTabs,
+		}));
 	const setActiveTabId = (nextId) =>
-		setBrowserState((current) => ({ ...current, activeTabId: typeof nextId === "function" ? nextId(current.activeTabId) : nextId }));
+		setBrowserState((current) => ({
+			...current,
+			activeTabId:
+				typeof nextId === "function" ? nextId(current.activeTabId) : nextId,
+		}));
 	const [address, setAddress] = useState("");
 	const [quickLinksOpen, setQuickLinksOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
@@ -110,8 +230,7 @@ function BrowserApp({ onRoute }) {
 				} else {
 					setAccess({ state: "ready" });
 				}
-			} catch (error) {
-				console.warn("Privacy access check unavailable; continuing locally.", error);
+			} catch {
 				if (!cancelled) setAccess({ state: "ready", offline: true });
 			}
 		})();
@@ -143,9 +262,10 @@ function BrowserApp({ onRoute }) {
 		const targetTab = tabs.find((tab) => tab.id === tabId);
 		if (!targetTab) return;
 
-		const nextHistory = options.historyIndex == null
-			? [...targetTab.history.slice(0, targetTab.historyIndex + 1), url]
-			: targetTab.history;
+		const nextHistory =
+			options.historyIndex == null
+				? [...targetTab.history.slice(0, targetTab.historyIndex + 1), url]
+				: targetTab.history;
 		const nextIndex = options.historyIndex ?? nextHistory.length - 1;
 		updateTab(tabId, (tab) => ({
 			...tab,
@@ -239,11 +359,17 @@ function BrowserApp({ onRoute }) {
 					<span className="brand-name">classroom</span>
 					<span className="brand-version">beta</span>
 				</div>
-				<div className="window-title">Home - Classroom</div>
 				<div className="header-actions">
-					<span className="origin-status">Stable workspace</span>
-					<button className="round-button" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-						{theme === "dark" ? "☼" : "☾"}
+					<span className="origin-status">
+						<span className="status-dot" /> Ready
+					</span>
+					<button
+						className="round-button"
+						aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+						title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+						onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+					>
+						<Icon name={theme === "dark" ? "sun" : "moon"} size={15} />
 					</button>
 					<button
 						className="round-button"
@@ -251,7 +377,7 @@ function BrowserApp({ onRoute }) {
 						title="Settings"
 						onClick={() => setSettingsOpen(true)}
 					>
-						⚙
+						<Icon name="settings" size={15} />
 					</button>
 				</div>
 			</header>
@@ -259,42 +385,139 @@ function BrowserApp({ onRoute }) {
 			<section className="tab-bar" aria-label="Open tabs">
 				<div className="tabs-scroll" role="tablist">
 					{tabs.map((tab) => (
-						<div className={`tab ${tab.id === activeTabId ? "tab-active" : ""}`} key={tab.id}>
-							<button role="tab" aria-selected={tab.id === activeTabId} onClick={() => selectTab(tab.id)}>
+						<div
+							className={`tab ${tab.id === activeTabId ? "tab-active" : ""}`}
+							key={tab.id}
+						>
+							<button
+								role="tab"
+								aria-selected={tab.id === activeTabId}
+								onClick={() => selectTab(tab.id)}
+							>
 								<span className="tab-dot" />
 								<span>{tab.title}</span>
 							</button>
-							<button className="tab-close" aria-label={`Close ${tab.title}`} onClick={() => closeTab(tab.id)}>×</button>
+							<button
+								className="tab-close"
+								aria-label={`Close ${tab.title}`}
+								onClick={() => closeTab(tab.id)}
+							>
+								×
+							</button>
 						</div>
 					))}
 				</div>
-				<button className="new-tab" aria-label="New tab" onClick={newTab}>+</button>
+				<button className="new-tab" aria-label="New tab" onClick={newTab}>
+					+
+				</button>
 			</section>
 
 			<section className="control-bar">
 				<div className="nav-controls">
-					<button disabled={!activeTab || activeTab.historyIndex <= 0} onClick={() => moveHistory(-1)} aria-label="Back">←</button>
-					<button disabled={!activeTab || activeTab.historyIndex >= activeTab.history.length - 1} onClick={() => moveHistory(1)} aria-label="Forward">→</button>
-					<button className={isReloading ? "reload-button is-loading" : "reload-button"} disabled={!activeTab?.url} onClick={reload} aria-label="Reload" title="Reload">↻</button>
+					<button
+						disabled={!activeTab || activeTab.historyIndex <= 0}
+						onClick={() => moveHistory(-1)}
+						aria-label="Back"
+						title="Back"
+					>
+						<Icon name="back" size={16} />
+					</button>
+					<button
+						disabled={
+							!activeTab ||
+							activeTab.historyIndex >= activeTab.history.length - 1
+						}
+						onClick={() => moveHistory(1)}
+						aria-label="Forward"
+						title="Forward"
+					>
+						<Icon name="forward" size={16} />
+					</button>
+					<button
+						className={
+							isReloading ? "reload-button is-loading" : "reload-button"
+						}
+						disabled={!activeTab?.url}
+						onClick={reload}
+						aria-label="Reload"
+						title="Reload"
+					>
+						<Icon name="reload" size={17} />
+					</button>
 				</div>
-				<form className="address-bar" onSubmit={(event) => { event.preventDefault(); openUrl(address); }}>
-					<span className="address-lock">⌁</span>
-					<input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Search or enter an address" aria-label="Search or enter an address" />
-					<button type="submit" className="go-button">Go</button>
+				<form
+					className="address-bar"
+					onSubmit={(event) => {
+						event.preventDefault();
+						openUrl(address);
+					}}
+				>
+					<span className="address-lock">
+						<Icon name="globe" size={14} />
+					</span>
+					<input
+						value={address}
+						onChange={(event) => setAddress(event.target.value)}
+						placeholder="Search or enter an address"
+						aria-label="Search or enter an address"
+					/>
+					<button
+						type="submit"
+						className="go-button"
+						aria-label="Open address"
+						title="Open address"
+					>
+						<Icon name="arrow" size={15} />
+					</button>
 				</form>
 				<div className="links-wrap">
-					<button className="links-button" onClick={() => setQuickLinksOpen((value) => !value)} aria-expanded={quickLinksOpen}>Quick links <span>⌄</span></button>
-					{quickLinksOpen && <QuickLinks onOpen={(url) => { setQuickLinksOpen(false); openUrl(url); }} />}
+					<button
+						className="links-button"
+						onClick={() => setQuickLinksOpen((value) => !value)}
+						aria-expanded={quickLinksOpen}
+					>
+						<Icon name="grid" size={14} /> Sites{" "}
+						<Icon name="chevronDown" size={12} />
+					</button>
+					{quickLinksOpen && (
+						<QuickLinks
+							onOpen={(url) => {
+								setQuickLinksOpen(false);
+								openUrl(url);
+							}}
+						/>
+					)}
 				</div>
 			</section>
 
 			<main className="browser-stage" ref={contentRef}>
-				{!activeTab?.url && <HomeView identity={identity} status={status} onSearch={openUrl} onQuickLink={openUrl} />}
-				{status && activeTab?.url && <div className="status-toast">{status}<span className="status-pulse" /></div>}
+				{!activeTab?.url && (
+					<HomeView
+						identity={identity}
+						status={status}
+						onSearch={openUrl}
+						onQuickLink={openUrl}
+					/>
+				)}
+				{status && activeTab?.url && (
+					<div className="status-toast">
+						{status}
+						<span className="status-pulse" />
+					</div>
+				)}
 			</main>
 
-			{consent === null && <ConsentBanner onAccept={acceptConsent} onDecline={declineConsent} />}
-			{settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} identity={identity} theme={theme} onThemeChange={setTheme} />}
+			{consent === null && (
+				<ConsentBanner onAccept={acceptConsent} onDecline={declineConsent} />
+			)}
+			{settingsOpen && (
+				<SettingsPanel
+					onClose={() => setSettingsOpen(false)}
+					identity={identity}
+					theme={theme}
+					onThemeChange={setTheme}
+				/>
+			)}
 		</div>
 	);
 }
@@ -305,35 +528,189 @@ function HomeView({ identity, status, onSearch, onQuickLink }) {
 			<img className="home-logo" src="/sj.png" alt="Classroom" />
 			<p className="eyebrow">Your browser, kept simple</p>
 			<h1>Search the web.</h1>
-			<p className="home-copy">A compact workspace for the tabs<br className="desktop-break" /> you use every day.</p>
-			<form className="home-search" onSubmit={(event) => { event.preventDefault(); onSearch(event.currentTarget.elements.query.value); }}>
-				<span>⌕</span><input name="query" placeholder="Search with Google or enter a URL" autoComplete="off" /><button type="submit">Open</button>
+			<p className="home-copy">
+				A compact workspace for the tabs
+				<br className="desktop-break" /> you use every day.
+			</p>
+			<form
+				className="home-search"
+				onSubmit={(event) => {
+					event.preventDefault();
+					onSearch(event.currentTarget.elements.query.value);
+				}}
+			>
+				<span>
+					<Icon name="search" size={17} />
+				</span>
+				<input
+					name="query"
+					placeholder="Search with Google or enter a URL"
+					autoComplete="off"
+				/>
+				<button type="submit">Open</button>
 			</form>
-			<div className="home-meta"><span className="online-dot" /> {status || "Ready"}<span className="meta-divider" /> {identity.fakeName}</div>
-			<div className="quick-launches"><span>Jump back in</span>{appConfig.quickLinks.slice(0, 4).map((link) => <button key={link.label} onClick={() => onQuickLink(link.url)}><b>{link.glyph}</b>{link.label}</button>)}</div>
+			<div className="home-meta">
+				<span className="online-dot" /> {status || "Ready"}
+				<span className="meta-divider" /> {identity.fakeName}
+			</div>
+			<div className="quick-launches">
+				<span>Jump back in</span>
+				{appConfig.quickLinks.slice(0, 4).map((link) => (
+					<button key={link.label} onClick={() => onQuickLink(link.url)}>
+						<ServiceLogo link={link} />
+						{link.label}
+					</button>
+				))}
+			</div>
 		</div>
 	);
 }
 
 function QuickLinks({ onOpen }) {
-	return <div className="quick-menu">{appConfig.quickLinks.map((link) => <button key={link.label} onClick={() => onOpen(link.url)}><b>{link.glyph}</b><span>{link.label}</span><small>↗</small></button>)}</div>;
+	return (
+		<div className="quick-menu">
+			{appConfig.quickLinks.map((link) => (
+				<button key={link.label} onClick={() => onOpen(link.url)}>
+					<ServiceLogo link={link} />
+					<span>{link.label}</span>
+					<small>
+						<Icon name="external" size={12} />
+					</small>
+				</button>
+			))}
+		</div>
+	);
 }
 
 function ConsentBanner({ onAccept, onDecline }) {
-	return <aside className="consent-banner"><div className="consent-icon">◌</div><div><strong>Help keep Classroom safe</strong><p>We use a one-way, anonymous device signal to enforce bans. No raw device details are stored.</p></div><div className="consent-actions"><button className="text-button" onClick={onDecline}>Not now</button><button className="solid-button" onClick={onAccept}>Allow protection</button></div></aside>;
+	return (
+		<aside className="consent-banner">
+			<div className="consent-icon">
+				<Icon name="shield" size={15} />
+			</div>
+			<div>
+				<strong>Help keep Classroom safe</strong>
+				<p>
+					We use a one-way, anonymous device signal to enforce bans. No raw
+					device details are stored.
+				</p>
+			</div>
+			<div className="consent-actions">
+				<button className="text-button" onClick={onDecline}>
+					Not now
+				</button>
+				<button className="solid-button" onClick={onAccept}>
+					Allow protection
+				</button>
+			</div>
+		</aside>
+	);
 }
 
 function SettingsPanel({ onClose, identity, theme, onThemeChange }) {
-	return <div className="overlay-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><aside className="side-panel" role="dialog" aria-modal="true" aria-labelledby="settings-heading"><div className="panel-top"><div><p className="eyebrow">Workspace</p><h2 id="settings-heading">Settings</h2></div><button className="close-button" onClick={onClose}>×</button></div><div className="settings-section"><p className="section-label">Your session</p><div className="identity-card"><span className="avatar-mark">{identity.fakeName.slice(-2)}</span><div><strong>{identity.fakeName}</strong><span>Anonymous session</span></div><i>Protected</i></div></div><div className="settings-section"><p className="section-label">Appearance</p><div className="theme-picker"><button className={theme === "dark" ? "theme-option selected" : "theme-option"} onClick={() => onThemeChange("dark")}>Dark</button><button className={theme === "light" ? "theme-option selected" : "theme-option"} onClick={() => onThemeChange("light")}>Light</button></div></div><div className="settings-section"><p className="section-label">About privacy</p><p className="settings-note">Classroom never needs your real name or email to open a tab. Device protection is opt-in and uses a one-way identifier.</p></div><div className="panel-footer"><span>Home - Classroom</span><span>v1 runtime</span></div></aside></div>;
+	return (
+		<div
+			className="overlay-backdrop"
+			onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+		>
+			<aside
+				className="side-panel"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="settings-heading"
+			>
+				<div className="panel-top">
+					<div>
+						<p className="eyebrow">Workspace</p>
+						<h2 id="settings-heading">Settings</h2>
+					</div>
+					<button className="close-button" onClick={onClose}>
+						×
+					</button>
+				</div>
+				<div className="settings-section">
+					<p className="section-label">Your session</p>
+					<div className="identity-card">
+						<span className="avatar-mark">{identity.fakeName.slice(-2)}</span>
+						<div>
+							<strong>{identity.fakeName}</strong>
+							<span>Anonymous session</span>
+						</div>
+						<i>Protected</i>
+					</div>
+				</div>
+				<div className="settings-section">
+					<p className="section-label">Appearance</p>
+					<div className="theme-picker">
+						<button
+							className={
+								theme === "dark" ? "theme-option selected" : "theme-option"
+							}
+							onClick={() => onThemeChange("dark")}
+						>
+							Dark
+						</button>
+						<button
+							className={
+								theme === "light" ? "theme-option selected" : "theme-option"
+							}
+							onClick={() => onThemeChange("light")}
+						>
+							Light
+						</button>
+					</div>
+				</div>
+				<div className="settings-section">
+					<p className="section-label">About privacy</p>
+					<p className="settings-note">
+						Classroom never needs your real name or email to open a tab. Device
+						protection is opt-in and uses a one-way identifier.
+					</p>
+				</div>
+				<div className="panel-footer">
+					<span>Home - Classroom</span>
+					<span>v1 runtime</span>
+				</div>
+			</aside>
+		</div>
+	);
 }
 
 function BlockedPage({ onHome }) {
 	const [asset] = useState(() => chooseBlockedAsset(appConfig.blockedAssets));
-	return <div className="blocked-page"><div className="blocked-noise" /><div className="blocked-card view-enter"><span className="blocked-kicker">Access paused</span><img src={asset} alt="Access restricted" /><h1>This space is closed<br />for this session.</h1><p>Your device or session is currently restricted. If you think this is a mistake, contact the administrator.</p><button className="solid-button" onClick={onHome}>Return home</button><span className="blocked-reference">Reference · {asset.split("/").pop()}</span></div></div>;
+	return (
+		<div className="blocked-page">
+			<div className="blocked-noise" />
+			<div className="blocked-card view-enter">
+				<span className="blocked-kicker">Access paused</span>
+				<img src={asset} alt="Access restricted" />
+				<h1>
+					This space is closed
+					<br />
+					for this session.
+				</h1>
+				<p>
+					Your device or session is currently restricted. If you think this is a
+					mistake, contact the administrator.
+				</p>
+				<button className="solid-button" onClick={onHome}>
+					Return home
+				</button>
+				<span className="blocked-reference">
+					Reference · {asset.split("/").pop()}
+				</span>
+			</div>
+		</div>
+	);
 }
 
 function LoadingScreen() {
-	return <div className="loading-screen"><img className="brand-mark-image" src="/sj.png" alt="" /><p>Preparing your workspace</p></div>;
+	return (
+		<div className="loading-screen">
+			<img className="brand-mark-image" src="/sj.png" alt="" />
+			<p>Preparing your workspace</p>
+		</div>
+	);
 }
 
 function AdminApp() {
@@ -352,7 +729,9 @@ function AdminDashboard() {
 			return;
 		}
 		supabase.auth.getSession().then(({ data }) => setSession(data.session));
-		const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+		const { data } = supabase.auth.onAuthStateChange((_event, nextSession) =>
+			setSession(nextSession)
+		);
 		return () => data.subscription.unsubscribe();
 	}, []);
 
@@ -379,7 +758,13 @@ function AdminDashboard() {
 
 	async function toggleBan(device) {
 		try {
-			await adminRequest("/api/admin/devices", { method: "PATCH", body: JSON.stringify({ deviceId: device.id, isBanned: !device.is_banned }) });
+			await adminRequest("/api/admin/devices", {
+				method: "PATCH",
+				body: JSON.stringify({
+					deviceId: device.id,
+					isBanned: !device.is_banned,
+				}),
+			});
 			await loadDevices();
 		} catch (toggleError) {
 			setError(toggleError.message);
@@ -387,7 +772,102 @@ function AdminDashboard() {
 	}
 
 	if (!session) return <AdminLogin configured={Boolean(supabase)} />;
-	return <div className="admin-page"><header className="admin-header"><div className="brand-lockup"><img className="brand-mark-image" src="/sj.png" alt="" /><span className="brand-name">classroom</span><span className="brand-version">admin</span></div><div className="admin-user">{session.user.email}<button className="quiet-button" onClick={() => supabase.auth.signOut()}>Sign out</button></div></header><main className="admin-main"><div className="admin-intro"><div><p className="eyebrow">Control room</p><h1>Device protection</h1><p>Review anonymous sessions and keep access fair.</p></div><button className="outline-button" onClick={loadDevices}>↻ Refresh</button></div>{error && <div className="admin-error">{error}</div>}<section className="admin-stats"><div><span>Tracked devices</span><strong>{devices.length}</strong></div><div><span>Active bans</span><strong>{devices.filter((device) => device.is_banned).length}</strong></div><div><span>Last updated</span><strong>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong></div></section><section className="device-table"><div className="table-heading"><span>Anonymous device</span><span>Session</span><span>Last seen</span><span>Status</span><span>Action</span></div>{loading ? <div className="table-empty">Loading registry…</div> : devices.length ? devices.map((device) => <div className="device-row" key={device.id}><div><strong>{device.device_label || "Anonymous device"}</strong><small>{device.id.slice(0, 8)}…{device.id.slice(-6)}</small></div><span>{device.latest_session_name || "No name"}</span><span>{formatDate(device.last_seen_at)}</span><span className={device.is_banned ? "status-banned" : "status-clear"}>{device.is_banned ? "Banned" : "Clear"}</span><button className={device.is_banned ? "outline-button" : "danger-button"} onClick={() => toggleBan(device)}>{device.is_banned ? "Restore" : "Ban"}</button></div>) : <div className="table-empty">No devices have checked in yet.</div>}</section></main></div>;
+	return (
+		<div className="admin-page">
+			<header className="admin-header">
+				<div className="brand-lockup">
+					<img className="brand-mark-image" src="/sj.png" alt="" />
+					<span className="brand-name">classroom</span>
+					<span className="brand-version">admin</span>
+				</div>
+				<div className="admin-user">
+					{session.user.email}
+					<button
+						className="quiet-button"
+						onClick={() => supabase.auth.signOut()}
+					>
+						Sign out
+					</button>
+				</div>
+			</header>
+			<main className="admin-main">
+				<div className="admin-intro">
+					<div>
+						<p className="eyebrow">Control room</p>
+						<h1>Device protection</h1>
+						<p>Review anonymous sessions and keep access fair.</p>
+					</div>
+					<button className="outline-button" onClick={loadDevices}>
+						<Icon name="reload" size={13} /> Refresh
+					</button>
+				</div>
+				{error && <div className="admin-error">{error}</div>}
+				<section className="admin-stats">
+					<div>
+						<span>Tracked devices</span>
+						<strong>{devices.length}</strong>
+					</div>
+					<div>
+						<span>Active bans</span>
+						<strong>
+							{devices.filter((device) => device.is_banned).length}
+						</strong>
+					</div>
+					<div>
+						<span>Last updated</span>
+						<strong>
+							{new Date().toLocaleTimeString([], {
+								hour: "2-digit",
+								minute: "2-digit",
+							})}
+						</strong>
+					</div>
+				</section>
+				<section className="device-table">
+					<div className="table-heading">
+						<span>Anonymous device</span>
+						<span>Session</span>
+						<span>Last seen</span>
+						<span>Status</span>
+						<span>Action</span>
+					</div>
+					{loading ? (
+						<div className="table-empty">Loading registry…</div>
+					) : devices.length ? (
+						devices.map((device) => (
+							<div className="device-row" key={device.id}>
+								<div>
+									<strong>{device.device_label || "Anonymous device"}</strong>
+									<small>
+										{device.id.slice(0, 8)}…{device.id.slice(-6)}
+									</small>
+								</div>
+								<span>{device.latest_session_name || "No name"}</span>
+								<span>{formatDate(device.last_seen_at)}</span>
+								<span
+									className={
+										device.is_banned ? "status-banned" : "status-clear"
+									}
+								>
+									{device.is_banned ? "Banned" : "Clear"}
+								</span>
+								<button
+									className={
+										device.is_banned ? "outline-button" : "danger-button"
+									}
+									onClick={() => toggleBan(device)}
+								>
+									{device.is_banned ? "Restore" : "Ban"}
+								</button>
+							</div>
+						))
+					) : (
+						<div className="table-empty">No devices have checked in yet.</div>
+					)}
+				</section>
+			</main>
+		</div>
+	);
 }
 
 function AdminLogin({ configured }) {
@@ -397,10 +877,55 @@ function AdminLogin({ configured }) {
 	async function signIn(event) {
 		event.preventDefault();
 		if (!supabase) return;
-		const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+		const { error: signInError } = await supabase.auth.signInWithPassword({
+			email,
+			password,
+		});
 		if (signInError) setError(signInError.message);
 	}
-	return <div className="admin-page"><div className="login-card"><div className="brand-lockup"><img className="brand-mark-image" src="/sj.png" alt="" /><span className="brand-name">classroom</span></div><p className="eyebrow">Restricted area</p><h1>Sign in to control room</h1>{!configured ? <p className="admin-error">Supabase is not configured. Add the Vercel environment variables before using admin access.</p> : <form onSubmit={signIn}><label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <p className="form-error">{error}</p>}<button className="solid-button" type="submit">Sign in securely</button></form>}</div></div>;
+	return (
+		<div className="admin-page">
+			<div className="login-card">
+				<div className="brand-lockup">
+					<img className="brand-mark-image" src="/sj.png" alt="" />
+					<span className="brand-name">classroom</span>
+				</div>
+				<p className="eyebrow">Restricted area</p>
+				<h1>Sign in to control room</h1>
+				{!configured ? (
+					<p className="admin-error">
+						Supabase is not configured. Add the Vercel environment variables
+						before using admin access.
+					</p>
+				) : (
+					<form onSubmit={signIn}>
+						<label>
+							Email
+							<input
+								type="email"
+								value={email}
+								onChange={(event) => setEmail(event.target.value)}
+								required
+							/>
+						</label>
+						<label>
+							Password
+							<input
+								type="password"
+								value={password}
+								onChange={(event) => setPassword(event.target.value)}
+								required
+							/>
+						</label>
+						{error && <p className="form-error">{error}</p>}
+						<button className="solid-button" type="submit">
+							Sign in securely
+						</button>
+					</form>
+				)}
+			</div>
+		</div>
+	);
 }
 
 function makeTab() {
@@ -429,7 +954,12 @@ function titleFor(url) {
 }
 
 function formatDate(date) {
-	return date ? new Date(date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—";
+	return date
+		? new Date(date).toLocaleString([], {
+				dateStyle: "medium",
+				timeStyle: "short",
+			})
+		: "—";
 }
 
 function readTheme() {
