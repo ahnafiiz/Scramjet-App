@@ -65,7 +65,7 @@ Redeploy after changing the variable. The toolbar can also be disabled from the 
 - Quick-link destinations and their service logos live in `app/src/config.js`.
 - The real Classroom mark is `app/public/sj.png`; the existing favicon is `app/public/favicon.ico`.
 
-Service logos use public Simple Icons CDN URLs with a letter fallback if an icon cannot be loaded. Change the `icon` and `color` values in `app/src/config.js` to customize a shortcut.
+Service logos are bundled in `app/public/brands/` so cross-origin isolation cannot block them. Change the `icon` and `color` values in `app/src/config.js` to customize a shortcut; keep the icon file inside that local folder.
 
 ## Admin route
 

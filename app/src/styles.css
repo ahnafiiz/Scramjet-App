@@ -647,6 +647,54 @@ input:focus-visible {
 	transform: translateY(-1px);
 }
 
+.workspace-pulse {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+	margin-top: 30px;
+	text-align: left;
+}
+.pulse-card {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	min-width: 0;
+	padding: 10px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+.pulse-icon {
+	width: 25px;
+	height: 25px;
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	border-radius: 7px;
+	background: color-mix(in srgb, var(--accent) 13%, transparent);
+	color: var(--accent);
+}
+.pulse-card span:last-child {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+.pulse-card strong {
+	overflow: hidden;
+	color: var(--ink);
+	font-size: 9px;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.pulse-card small {
+	overflow: hidden;
+	color: var(--dim);
+	font-size: 8px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .change-log {
 	margin-top: 52px;
 	text-align: left;
@@ -1307,6 +1355,19 @@ input:focus-visible {
 	}
 	.desktop-break {
 		display: none;
+	}
+	.workspace-pulse {
+		display: flex;
+		overflow-x: auto;
+		padding-bottom: 2px;
+		scrollbar-width: none;
+	}
+	.workspace-pulse::-webkit-scrollbar {
+		display: none;
+	}
+	.pulse-card {
+		width: 190px;
+		min-width: 190px;
 	}
 	.consent-banner {
 		right: 12px;

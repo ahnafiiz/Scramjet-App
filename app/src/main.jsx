@@ -207,6 +207,13 @@ function BrowserApp({ onRoute }) {
 	}, [activeTabId, activeTab?.url]);
 
 	useEffect(() => {
+		const warmup = window.setTimeout(() => {
+			runtime.prepare().catch(() => {});
+		}, 120);
+		return () => window.clearTimeout(warmup);
+	}, [runtime]);
+
+	useEffect(() => {
 		if (consent !== "accepted") {
 			setAccess({ state: "ready" });
 			return;
@@ -557,14 +564,54 @@ function HomeView({ identity, status, onSearch, onQuickLink }) {
 			</div>
 			<div className="quick-launches">
 				<span>Jump back in</span>
-				{appConfig.quickLinks.slice(0, 4).map((link) => (
-					<button key={link.label} onClick={() => onQuickLink(link.url)}>
+				{appConfig.quickLinks.map((link) => (
+					<button
+						key={link.label}
+						type="button"
+						title={`Open ${link.label}`}
+						onClick={() => onQuickLink(link.url)}
+					>
 						<ServiceLogo link={link} />
 						{link.label}
 					</button>
 				))}
 			</div>
+			<WorkspacePulse />
 			<ChangeLog />
+		</div>
+	);
+}
+
+function WorkspacePulse() {
+	return (
+		<div className="workspace-pulse" aria-label="Workspace overview">
+			<div className="pulse-card">
+				<span className="pulse-icon">
+					<Icon name="search" size={15} />
+				</span>
+				<span>
+					<strong>Google search</strong>
+					<small>Fast results, one place</small>
+				</span>
+			</div>
+			<div className="pulse-card">
+				<span className="pulse-icon">
+					<Icon name="grid" size={15} />
+				</span>
+				<span>
+					<strong>Independent tabs</strong>
+					<small>Every tab keeps its history</small>
+				</span>
+			</div>
+			<div className="pulse-card">
+				<span className="pulse-icon">
+					<Icon name="shield" size={15} />
+				</span>
+				<span>
+					<strong>Private by default</strong>
+					<small>No real name required</small>
+				</span>
+			</div>
 		</div>
 	);
 }

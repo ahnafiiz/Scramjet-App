@@ -19,6 +19,7 @@ The current UI work is on branch `BETA`. `main` is the stable line and must not 
 - `app/src/api.js` — browser calls to access-check and admin API routes.
 - `app/public/sj.png` — main Classroom mark.
 - `app/public/favicon.ico` — existing favicon; keep it unless the owner requests a replacement.
+- `app/public/brands/` — local service marks used by quick links. Keep these local; remote image URLs were blocked by the deployment's cross-origin isolation headers.
 - `app/public/blocked/` — blocked-screen image assets copied into the Vercel output.
 - `api/ban/check.js` — checks a submitted hashed device signal and records the anonymous session.
 - `api/admin/devices.js` — authenticated admin device list and ban/restore endpoint.
@@ -61,6 +62,8 @@ Weights are relative. They do not need to add up to 100; `70`, `25`, and `5` beh
 
 The selection function uses browser cryptographic randomness. Do not replace it with `Math.random()` or make the image choice server-side.
 
+The home screen includes a compact workspace overview and a horizontally scrollable, expandable change log. Change-log copy is configured in `app/src/config.js` under `changeLog`.
+
 ## Identifying visitors in admin
 
 The product deliberately does not identify real people. It can distinguish a returning anonymous device and its browser session:
@@ -86,6 +89,12 @@ Do not add `localStorage.clear()`, broad cookie deletion, `Clear-Site-Data`, or 
 - The repository already sends `Cross-Origin-Resource-Policy: cross-origin` because the client runtime loads cross-origin browser resources. Do not change this to `same-origin` without testing Scramjet, Wisp, fonts, and service-worker behavior.
 - Do not add `unsafe-eval` to a Content Security Policy as a quick fix. The application source does not call `eval`; an eval warning usually comes from a third-party runtime, an injected preview tool, or a browser security policy. Identify the source before weakening CSP.
 - Form inputs in the address bar and admin login have explicit `id` and `name` attributes for browser audits.
+
+## Performance notes
+
+The browser runtime exposes `prepare()` and the home screen warms Scramjet/controller assets shortly after first render. This removes most first-navigation setup time when a Wisp endpoint is healthy. It cannot make an unavailable Wisp server or a destination's own CAPTCHA respond faster.
+
+Quick-link logos are bundled under `app/public/brands/` rather than loaded from a CDN. This prevents the fallback letters from appearing when COEP/CORP blocks a third-party image response.
 
 ## Admin and environment setup
 

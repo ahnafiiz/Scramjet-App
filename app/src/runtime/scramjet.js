@@ -5,17 +5,20 @@ let transportPromise;
 let connection;
 
 function endpoints() {
-	return window.SCRAMJET_APP_CONFIG?.transport?.endpoints || [
-		"wss://wisp.webmc.fun/",
-		"wss://wisp.mercurywork.shop/",
-	];
+	return (
+		window.SCRAMJET_APP_CONFIG?.transport?.endpoints || [
+			"wss://wisp.webmc.fun/",
+			"wss://wisp.mercurywork.shop/",
+		]
+	);
 }
 
 async function ensureTransport() {
 	if (transportPromise) return transportPromise;
 	transportPromise = (async () => {
 		if (typeof window.registerSW === "function") await window.registerSW();
-		if (!connection) connection = new window.BareMux.BareMuxConnection("/baremux/worker.js");
+		if (!connection)
+			connection = new window.BareMux.BareMuxConnection("/baremux/worker.js");
 
 		let lastError;
 		for (const endpoint of endpoints()) {
@@ -70,6 +73,9 @@ export function createScramjetRuntime() {
 	const frames = new Map();
 
 	return {
+		prepare() {
+			return ensureController();
+		},
 		async navigate(tabId, container, url) {
 			const controller = await ensureController();
 			let frame = frames.get(tabId);
@@ -88,7 +94,8 @@ export function createScramjetRuntime() {
 		},
 		async reload(tabId) {
 			const frame = frames.get(tabId);
-			if (frame?.frame.contentWindow) frame.frame.contentWindow.location.reload();
+			if (frame?.frame.contentWindow)
+				frame.frame.contentWindow.location.reload();
 		},
 		remove(tabId) {
 			const frame = frames.get(tabId);
