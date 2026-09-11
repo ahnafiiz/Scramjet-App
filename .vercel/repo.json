@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_CJLmAmsSKqZpAH2ZwDbImAV9GeOA",
+      "name": "scramjet-app",
+      "directory": ".",
+      "orgId": "team_LLJpqXeGTdw4k7VWkLtyYGX3"
+    }
+  ]
+}
