@@ -4,7 +4,7 @@ import { adminRequest, checkAccess, supabase } from "./api";
 import { appConfig } from "./config";
 import {
 	getConsent,
-	getDeviceFingerprint,
+	getDeviceIdentity,
 	getSessionIdentity,
 	setConsent,
 } from "./lib/deviceFingerprint";
@@ -222,11 +222,11 @@ function BrowserApp({ onRoute }) {
 		let cancelled = false;
 		(async () => {
 			try {
-				const deviceHash = await getDeviceFingerprint(
+				const deviceToken = getDeviceIdentity(
 					appConfig.fingerprint.identityKey
 				);
 				const result = await checkAccess({
-					deviceHash,
+					deviceToken,
 					sessionId: identity.sessionId,
 					fakeName: identity.fakeName,
 				});
@@ -688,8 +688,8 @@ function ConsentBanner({ onAccept, onDecline }) {
 			<div>
 				<strong>Help keep Classroom safe</strong>
 				<p>
-					We use a one-way, anonymous device signal to enforce bans. No raw
-					device details are stored.
+					We use a one-way, anonymous device ID to enforce bans. No browser
+					fingerprint or raw device details are stored.
 				</p>
 			</div>
 			<div className="consent-actions">
@@ -822,6 +822,8 @@ function AdminDashboard() {
 	const [devices, setDevices] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
+	const [editingDeviceId, setEditingDeviceId] = useState(null);
+	const [labelDraft, setLabelDraft] = useState("");
 
 	useEffect(() => {
 		if (!supabase) {
@@ -871,6 +873,29 @@ function AdminDashboard() {
 		}
 	}
 
+	function startLabelEdit(device) {
+		setEditingDeviceId(device.id);
+		setLabelDraft(
+			device.device_label === "Anonymous device" ? "" : device.device_label || ""
+		);
+	}
+
+	async function saveLabel(device) {
+		try {
+			await adminRequest("/api/admin/devices", {
+				method: "PATCH",
+				body: JSON.stringify({
+					deviceId: device.id,
+					deviceLabel: labelDraft,
+				}),
+			});
+			setEditingDeviceId(null);
+			await loadDevices();
+		} catch (saveError) {
+			setError(saveError.message);
+		}
+	}
+
 	if (!session) return <AdminLogin configured={Boolean(supabase)} />;
 	return (
 		<div className="admin-page">
@@ -896,8 +921,8 @@ function AdminDashboard() {
 						<p className="eyebrow">Control room</p>
 						<h1>Device protection</h1>
 						<p>
-							Review anonymous sessions and keep access fair. Device and session
-							codes distinguish repeat visitors without storing names.
+							Name a device yourself to recognize people in your household. The
+							browser still collects no real name, IP address, or fingerprint.
 						</p>
 					</div>
 					<button className="outline-button" onClick={loadDevices}>
@@ -928,7 +953,7 @@ function AdminDashboard() {
 				</section>
 				<section className="device-table">
 					<div className="table-heading">
-						<span>Device / label</span>
+						<span>Device / household label</span>
 						<span>Latest session</span>
 						<span>Last seen</span>
 						<span>Status</span>
@@ -939,9 +964,37 @@ function AdminDashboard() {
 					) : devices.length ? (
 						devices.map((device) => (
 							<div className="device-row" key={device.id}>
-								<div>
+								<div className="device-label-cell">
 									<strong>{device.device_code || "Unknown device"}</strong>
-									<small>{device.device_label || "Anonymous device"}</small>
+									{editingDeviceId === device.id ? (
+										<div className="label-editor">
+											<input
+												autoFocus
+												aria-label={`Label for ${device.device_code || "device"}`}
+												maxLength="64"
+												value={labelDraft}
+												onChange={(event) => setLabelDraft(event.target.value)}
+												onKeyDown={(event) => {
+													if (event.key === "Enter") saveLabel(device);
+													if (event.key === "Escape") setEditingDeviceId(null);
+												}}
+											/>
+											<button className="label-save" onClick={() => saveLabel(device)}>
+												Save
+											</button>
+											<button
+												className="label-cancel"
+												onClick={() => setEditingDeviceId(null)}
+											>
+												Cancel
+											</button>
+										</div>
+									) : (
+										<div className="label-display">
+											<small>{device.device_label || "Anonymous device"}</small>
+											<button onClick={() => startLabelEdit(device)}>Name</button>
+										</div>
+									)}
 								</div>
 								<div>
 									<strong>

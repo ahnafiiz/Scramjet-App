@@ -1,5 +1,3 @@
-const encoder = new TextEncoder();
-
 function readStorage(key) {
 	try {
 		return localStorage.getItem(key);
@@ -19,61 +17,39 @@ function writeStorage(key, value) {
 function getInstallId(identityKey) {
 	const existing = readStorage(identityKey);
 	if (existing) return existing;
-	const installId = crypto.randomUUID();
+	const installId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 	writeStorage(identityKey, installId);
 	return installId;
 }
 
-function canvasSignal() {
-	try {
-		const canvas = document.createElement("canvas");
-		canvas.width = 240;
-		canvas.height = 64;
-		const context = canvas.getContext("2d");
-		if (!context) return "unavailable";
-		context.textBaseline = "top";
-		context.font = "14px Arial";
-		context.fillStyle = "#1f2937";
-		context.fillRect(0, 0, 240, 64);
-		context.fillStyle = "#d9f99d";
-		context.fillText("Classroom device signal", 8, 8);
-		return canvas.toDataURL();
-	} catch {
-		return "unavailable";
-	}
-}
-
 /**
- * Collects only coarse browser signals and immediately hashes them.
- * Raw canvas output, hardware values, and user-agent details never leave the
- * browser. The server hashes this digest again with a private salt.
+ * Returns a locally generated, pseudonymous installation identifier. It is
+ * deliberately not based on canvas, hardware, IP address, or browser traits.
+ * The server hashes it again with a private salt before storage.
  */
-export async function getDeviceFingerprint(identityKey) {
-	const screenData = window.screen || {};
-	const signals = [
-		getInstallId(identityKey),
-		navigator.language || "unknown",
-		navigator.platform || "unknown",
-		Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown",
-		`${screenData.width || 0}x${screenData.height || 0}x${screenData.colorDepth || 0}`,
-		String(navigator.hardwareConcurrency || 0),
-		String(navigator.deviceMemory || 0),
-		canvasSignal(),
-	].join("|");
-
-	const digest = await crypto.subtle.digest("SHA-256", encoder.encode(signals));
-	return Array.from(new Uint8Array(digest), (byte) =>
-		byte.toString(16).padStart(2, "0")
-	).join("");
+export function getDeviceIdentity(identityKey) {
+	return getInstallId(identityKey);
 }
 
 export function getSessionIdentity(identityKey) {
 	const storageKey = `${identityKey}-session`;
 	const existing = readStorage(storageKey);
-	if (existing) return JSON.parse(existing);
+	if (existing) {
+		try {
+			const parsed = JSON.parse(existing);
+			if (
+				typeof parsed?.sessionId === "string" &&
+				typeof parsed?.fakeName === "string"
+			) {
+				return parsed;
+			}
+		} catch {
+			// A malformed local value is replaced with a fresh anonymous session.
+		}
+	}
 
 	const identity = {
-		sessionId: crypto.randomUUID(),
+		sessionId: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`,
 		fakeName: `Guest ${Math.floor(1000 + Math.random() * 9000)}`,
 	};
 	writeStorage(storageKey, JSON.stringify(identity));

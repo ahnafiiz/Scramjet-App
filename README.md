@@ -32,6 +32,9 @@ npm run build
 
 The build writes the deployable static site to `public/`. Vercel uses the repository build command and publishes that directory.
 
+`public/` is generated output. The source files that need to be copied unchanged
+live in `app/public/`; do not hand-edit `public/`, because the build recreates it.
+
 ## Deploying the BETA branch on Vercel
 
 1. Open the Vercel project settings.
@@ -70,6 +73,11 @@ Service logos are bundled in `app/public/brands/` so cross-origin isolation cann
 ## Admin route
 
 There is no visible admin button. Open `/admin` directly and sign in with the Supabase admin account. The Supabase database migration and setup notes are in `supabase/SETUP.md`.
+
+The admin control room shows a stable device code and latest anonymous session.
+Use **Name** beside a device to add a household label such as `Sam — bedroom
+laptop`. Labels are entered only by an authenticated administrator; the browser
+does not collect real names or secretly fingerprint people.
 
 ## Runtime troubleshooting
 

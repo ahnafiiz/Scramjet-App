@@ -39,6 +39,7 @@ export async function requireAdmin(request) {
 
 export function getRequestIp(request) {
 	return (
+		request.headers["x-vercel-forwarded-for"] ||
 		request.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
 		request.headers["x-real-ip"] ||
 		"unknown"
@@ -46,5 +47,10 @@ export function getRequestIp(request) {
 }
 
 export function sendJson(response, status, payload) {
-	response.status(status).setHeader("content-type", "application/json").end(JSON.stringify(payload));
+	response
+		.status(status)
+		.setHeader("content-type", "application/json; charset=utf-8")
+		.setHeader("cache-control", "no-store")
+		.setHeader("x-content-type-options", "nosniff")
+		.end(JSON.stringify(payload));
 }

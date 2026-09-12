@@ -1,4 +1,5 @@
 import { requireAdmin, sendJson } from "../_lib/supabase.js";
+import { isUuid, normaliseDeviceLabel } from "../_lib/validation.js";
 
 export default async function handler(request, response) {
 	const access = await requireAdmin(request);
@@ -44,8 +45,27 @@ export default async function handler(request, response) {
 				typeof request.body === "string"
 					? JSON.parse(request.body)
 					: request.body || {};
-			if (!body.deviceId || typeof body.isBanned !== "boolean") {
-				return sendJson(response, 400, { error: "Invalid ban update." });
+			if (!isUuid(body.deviceId)) {
+				return sendJson(response, 400, { error: "Invalid device update." });
+			}
+
+			if (typeof body.deviceLabel === "string") {
+				const deviceLabel = normaliseDeviceLabel(body.deviceLabel);
+				if (!deviceLabel) {
+					return sendJson(response, 400, {
+						error: "A device label can contain up to 64 characters.",
+					});
+				}
+				const { error } = await access.supabase
+					.from("device_registry")
+					.update({ device_label: deviceLabel })
+					.eq("id", body.deviceId);
+				if (error) throw error;
+				return sendJson(response, 200, { ok: true, deviceLabel });
+			}
+
+			if (typeof body.isBanned !== "boolean") {
+				return sendJson(response, 400, { error: "Invalid device update." });
 			}
 			const { error } = await access.supabase
 				.from("device_registry")

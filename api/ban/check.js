@@ -4,6 +4,7 @@ import {
 	hashServerSide,
 	sendJson,
 } from "../_lib/supabase.js";
+import { defaultDeviceLabel, isUuid } from "../_lib/validation.js";
 
 export default async function handler(request, response) {
 	if (request.method !== "POST") return sendJson(response, 405, { error: "Method not allowed." });
@@ -12,12 +13,12 @@ export default async function handler(request, response) {
 
 	try {
 		const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
-		const { deviceHash, sessionId, fakeName } = body;
-		if (!/^[a-f0-9]{64}$/i.test(deviceHash || "") || !/^[0-9a-f-]{20,}$/i.test(sessionId || "")) {
+		const { deviceToken, sessionId, fakeName } = body;
+		if (!isUuid(deviceToken) || !isUuid(sessionId)) {
 			return sendJson(response, 400, { error: "Invalid anonymous identity." });
 		}
 
-		const fingerprintHash = hashServerSide(deviceHash);
+		const fingerprintHash = hashServerSide(deviceToken);
 		const ipHash = hashServerSide(getRequestIp(request));
 		const { data: device, error: deviceError } = await supabase
 			.from("device_registry")
@@ -26,7 +27,7 @@ export default async function handler(request, response) {
 					fingerprint_hash: fingerprintHash,
 					last_ip_hash: ipHash,
 					last_seen_at: new Date().toISOString(),
-					device_label: "Anonymous device",
+					device_label: defaultDeviceLabel,
 				},
 				{ onConflict: "fingerprint_hash" }
 			)

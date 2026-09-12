@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&family=Poppins:wght@500;600;700&display=swap");
-
 :root {
 	color-scheme: dark;
 	--ink: #f3f5f7;
@@ -18,7 +16,9 @@
 	--service-icon-filter: brightness(0) invert(1);
 	--danger: #ff9387;
 	--shadow: 0 20px 60px rgba(0, 0, 0, 0.34);
-	font-family: "Inter", sans-serif;
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+		"Segoe UI", sans-serif;
+	--font-display: ui-rounded, "Aptos Display", "Segoe UI", sans-serif;
 	font-synthesis: none;
 }
 
@@ -122,7 +122,7 @@ input:focus-visible {
 	box-shadow: 7px -4px 0 -2px #d3e5a6;
 }
 .brand-name {
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-size: 15px;
 	font-weight: 600;
 	letter-spacing: -0.035em;
@@ -132,7 +132,7 @@ input:focus-visible {
 	color: var(--accent);
 	border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 	border-radius: 4px;
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	font-weight: 700;
 	letter-spacing: 0.08em;
@@ -157,7 +157,7 @@ input:focus-visible {
 	gap: 6px;
 	color: var(--dim);
 	margin-right: 5px;
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	letter-spacing: 0.02em;
 }
@@ -369,7 +369,7 @@ input:focus-visible {
 	border-radius: 8px;
 	background: var(--accent);
 	color: var(--accent-ink);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 	font-weight: 700;
 }
@@ -453,7 +453,7 @@ input:focus-visible {
 	filter: var(--service-icon-filter);
 }
 .service-fallback {
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 	font-weight: 700;
 }
@@ -518,7 +518,7 @@ input:focus-visible {
 .eyebrow {
 	margin: 0 0 10px;
 	color: var(--accent);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	font-weight: 700;
 	letter-spacing: 0.14em;
@@ -529,7 +529,7 @@ input:focus-visible {
 .login-card h1,
 .blocked-card h1 {
 	margin: 0;
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-weight: 600;
 	letter-spacing: -0.055em;
 	line-height: 1.05;
@@ -587,7 +587,7 @@ input:focus-visible {
 	padding: 9px 14px;
 	background: var(--accent);
 	color: var(--accent-ink);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 	font-weight: 700;
 }
@@ -711,7 +711,7 @@ input:focus-visible {
 }
 .change-log-heading h2 {
 	margin: 0;
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-size: 17px;
 	letter-spacing: -0.04em;
 }
@@ -763,7 +763,7 @@ input:focus-visible {
 }
 .change-card-version {
 	color: var(--accent);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	font-weight: 700;
 }
@@ -773,7 +773,7 @@ input:focus-visible {
 }
 .change-card h3 {
 	margin: 15px 0 6px;
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-size: 12px;
 	letter-spacing: -0.025em;
 }
@@ -820,7 +820,7 @@ input:focus-visible {
 	font-size: 18px;
 }
 .consent-banner strong {
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 }
 .consent-banner p {
@@ -876,7 +876,7 @@ input:focus-visible {
 }
 .panel-top h2 {
 	margin: 0;
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-size: 26px;
 	letter-spacing: -0.05em;
 }
@@ -900,7 +900,7 @@ input:focus-visible {
 .section-label {
 	margin: 0 0 11px;
 	color: var(--dim);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	font-weight: 700;
 	letter-spacing: 0.12em;
@@ -923,7 +923,7 @@ input:focus-visible {
 	border-radius: 6px;
 	background: var(--accent);
 	color: var(--accent-ink);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 	font-weight: 700;
 }
@@ -1018,7 +1018,7 @@ input:focus-visible {
 }
 .blocked-kicker {
 	color: var(--danger);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	font-weight: 700;
 	letter-spacing: 0.14em;
@@ -1126,7 +1126,7 @@ input:focus-visible {
 .admin-stats span {
 	display: block;
 	color: var(--dim);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -1134,7 +1134,7 @@ input:focus-visible {
 .admin-stats strong {
 	display: block;
 	margin-top: 8px;
-	font-family: "Poppins", sans-serif;
+	font-family: var(--font-display);
 	font-size: 24px;
 	letter-spacing: -0.04em;
 }
@@ -1154,7 +1154,7 @@ input:focus-visible {
 .table-heading {
 	color: var(--dim);
 	border-bottom: 1px solid var(--line);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 9px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -1180,6 +1180,48 @@ input:focus-visible {
 	color: var(--dim);
 	font-family: monospace;
 	font-size: 9px;
+}
+.device-label-cell {
+	min-width: 0;
+}
+.label-display,
+.label-editor {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
+}
+.label-display small {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.label-display button,
+.label-save,
+.label-cancel {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	color: var(--accent);
+	font-size: 9px;
+	font-weight: 700;
+}
+.label-cancel {
+	color: var(--muted);
+}
+.label-editor input {
+	width: min(170px, 100%);
+	height: 26px;
+	padding: 0 7px;
+	border: 1px solid var(--line-strong);
+	border-radius: 4px;
+	outline: 0;
+	background: var(--canvas-deep);
+	color: var(--ink);
+	font-size: 10px;
+}
+.label-editor input:focus {
+	border-color: var(--accent);
 }
 .status-banned {
 	color: var(--danger);
@@ -1222,7 +1264,7 @@ input:focus-visible {
 	display: grid;
 	gap: 7px;
 	color: var(--muted);
-	font-family: "Montserrat", sans-serif;
+	font-family: var(--font-display);
 	font-size: 10px;
 }
 .login-card input {

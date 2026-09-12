@@ -19,11 +19,16 @@ const port = Number.parseInt(process.env.PORT || "8080", 10);
 const fastify = Fastify({
 	logger: true,
 	serverFactory: (handler) =>
-		createServer((request, reply) => {
-			reply.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-			reply.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-			reply.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-			handler(request, reply);
+	createServer((request, reply) => {
+		reply.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+		reply.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+		reply.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+		reply.setHeader("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' wss://wisp.webmc.fun wss://wisp.mercurywork.shop; worker-src 'self' blob:; frame-src 'self' blob:; manifest-src 'self'");
+		reply.setHeader("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()");
+		reply.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+		reply.setHeader("X-Content-Type-Options", "nosniff");
+		reply.setHeader("X-Frame-Options", "DENY");
+		handler(request, reply);
 		}),
 });
 

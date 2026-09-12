@@ -15,7 +15,7 @@ The current UI work is on branch `BETA`. `main` is the stable line and must not 
 - `app/src/config.js` — Google search configuration, quick links, change-log entries, and weighted blocked assets.
 - `app/src/runtime/scramjet.js` — client-side Scramjet/bare-mux/libcurl transport setup.
 - `app/src/lib/weightedRandom.js` — weighted blocked-asset selection.
-- `app/src/lib/deviceFingerprint.js` — opt-in coarse browser signal hashing and anonymous session identity.
+- `app/src/lib/deviceFingerprint.js` — opt-in local installation ID and anonymous session identity.
 - `app/src/api.js` — browser calls to access-check and admin API routes.
 - `app/public/sj.png` — main Classroom mark.
 - `app/public/favicon.ico` — existing favicon; keep it unless the owner requests a replacement.
@@ -25,7 +25,7 @@ The current UI work is on branch `BETA`. `main` is the stable line and must not 
 - `api/admin/devices.js` — authenticated admin device list and ban/restore endpoint.
 - `api/_lib/supabase.js` — Supabase service-role helpers and admin authorization.
 - `supabase/migrations/20260910000000_device_protection.sql` — device/session registry schema and RLS setup.
-- `public/` — generated deployment output. Do not hand-edit it; run `npm run build`.
+- `public/` — generated deployment output. Do not hand-edit it; `npm run build` recreates it from `app/public/` and the Vite app.
 - `scripts/build-static.mjs` — copies Scramjet, libcurl, and bare-mux browser assets into `public/`.
 - `vercel.json` — Vercel build/output settings, SPA rewrites, and cross-origin headers.
 
@@ -73,7 +73,7 @@ The product deliberately does not identify real people. It can distinguish a ret
 - `Guest ####` is the local fake session name.
 - The admin table also shows last seen time and ban state.
 
-The device fingerprint is an opt-in, one-way digest of coarse signals. Raw canvas data and hardware values are not sent. A shared network can contain many device codes; never use IP alone as a ban key.
+The consented device identity is a random local installation ID, salted and hashed by the server. It is not derived from canvas, hardware, browser traits, or IP. An administrator can assign a household label (for example, `Alex — desk PC`) from the control room; this is the appropriate way to recognize a person/device without collecting an identity automatically. A shared network can contain many device codes; never use IP alone as a ban key.
 
 If the owner needs human-readable labels, add an authenticated label-edit operation to `api/admin/devices.js` and a Supabase column update. Do not expose the fingerprint hash or service-role key to the browser.
 

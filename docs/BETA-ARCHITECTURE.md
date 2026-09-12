@@ -8,7 +8,7 @@ Browser
 │  ├─ browser tabs, history, quick links, settings
 │  ├─ /admin route and Supabase Auth session
 │  ├─ /blocked route and weighted asset picker
-│  └─ consent-first anonymous device protection
+│  └─ consent-first pseudonymous device protection
 ├─ Scramjet v1 assets: public/scram/
 ├─ BareMux/libcurl assets: public/baremux/ and public/libcurl/
 ├─ browser service worker: public/sw.js
@@ -48,7 +48,7 @@ Supabase
 ## Privacy and shared networks
 
 The browser does not send canvas pixels, hardware values, or a raw IP address.
-It sends a client-side SHA-256 digest only after consent. The API hashes that
-digest and the request IP a second time using `BAN_HASH_SALT`. IP is a risk and
-audit signal, never the ban key. Two people on the same network therefore do
-not share a ban unless their own device or session has been banned.
+After consent, it sends a randomly generated local installation ID. The API
+hashes that ID and the request IP using `BAN_HASH_SALT`. IP is a risk and audit
+signal, never the ban key. Two people on the same network therefore do not
+share a ban unless their own device or session has been banned.
